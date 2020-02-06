@@ -1,4 +1,5 @@
 % https://kenschutte.com/midi
+% thena wafuqerngujengjren
 
 addpath(genpath("/Users/erikstalberg/Documents/1Studier/Spektralanalys"));
 %%
