@@ -1,0 +1,9 @@
+naa: sung on "nåå"
+txt: sung on text
+cor: correct version
+inc: incorrect version
+1:   alto
+2:   tenor
+3:   high baritone
+4:   low baritone
+5:   bass
