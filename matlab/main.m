@@ -31,10 +31,10 @@ midinotes(:,3) = midi2freq(midinotes(:,3)); % mito notes to frequencies
 qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka error margin
 
 %%
-voice = 1;
-tones = zeros(sum(midinotes(:,1) == voice),3);
+voice = 4;
+tones = zeros(sum(midinotes(:,1) == voice),4);
 
-d    = 4; % peaks to look for
+d    = 3; % peaks to look for
 P    = 1024;
 ff   = (0:(P/2-1))/P*fs; 
 cut  = 0.0375;
@@ -49,9 +49,11 @@ for i=1:length(midinotes)
         tones(k,2) = midinotes(i,3);
         x = txtcor(tindex,voice); % sound sequence
         spect = fftshift(abs(fft(x,P))/length(tindex)).^2; % periodogram
+        [fRelax, ~] = relax(x,d);
+        tones(k,4) = min(sort(fs*fRelax/2/pi));
         spect = spect(P/2+1:end);
         if sum(spect) > 1e-8
-            %per = combFilter(spect,0.5);
+            per = combFilter(spect,1,4);
             tones(k,3) = ff(min(sort(findpeaks(spect,d)))); % estimated base freq
         end
         k = k+1;
@@ -61,10 +63,13 @@ end
 %%
 
 figure
-semilogy(tones(:,1),tones(:,2),".")
-hold on
 semilogy(tones(:,1),tones(:,3),"x")
-legend("Expected", "Estimate")
+hold on
+semilogy(tones(:,1),tones(:,4),"o")
+legend("Periodogram","Relax")
+scatter(tones(:,1),tones(:,2)./qtone,"r^")
+scatter(tones(:,1),tones(:,2).*qtone,"rV")
+
 
 
 %%
