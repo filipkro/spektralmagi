@@ -29,7 +29,6 @@ N = length(txtcor2);
 voice = 4;
 
 peaks = zeros(windows,d);
-peaksR = zeros(windows,d);
 
 for t=1:windows-1
     x = txtcor2((t-1)*window+1:t*window,voice);
@@ -54,13 +53,11 @@ for i=wdw2/2:length(peaks)-wdw2/2
 end
 
 %%
-figure
 hold on
-for i=1:1
-    scatter(1:windows,movmedian(ff(peaks(:,i)),37))
-    scatter(1:windows,movmedian(peaksR(:,i),37))
+for i=1:2
+    scatter(1:windows,ff(peaks2(:,i)))
+    scatter(1:windows,peaks(:,i))
 end
-legend('Per','Relax')
 ylim([60 1000])
 %ylim([65 600])
 
