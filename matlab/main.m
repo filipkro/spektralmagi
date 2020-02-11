@@ -32,11 +32,11 @@ qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka erro
 
 %%
 voice = 4;
-tones = zeros(sum(midinotes(:,1) == voice),4);
+tones = zeros(sum(midinotes(:,1) == voice),5);
 
 d    = 3; % peaks to look for
-P    = 1024;
-ff   = (0:(P/2-1))/P*fs; 
+P    = 512;
+ff   = (0:(P-1))/P*fs; 
 cut  = 0.0375;
 
 k = 1;
@@ -45,18 +45,33 @@ for i=1:length(midinotes)
         tstart = midinotes(i,5)+cut;
         tend   = midinotes(i,6)-cut;
         tindex = round(tstart*fs):round(tend*fs);
+        N      = length(tindex);
         tones(k,1) = mean([tstart tend]); % Mean time of note
         tones(k,2) = midinotes(i,3);
         x = txtcor(tindex,voice); % sound sequence
-        spect = fftshift(abs(fft(x,P))/length(tindex)).^2; % periodogram
-        [fRelax, ~] = relax(x,d);
-        tones(k,4) = min(sort(fs*fRelax/2/pi));
+        
+        % Relax
+        %[fRelax, ~] = relax(x,d);
+        %tones(k,4) = min(sort(fs*fRelax/2/pi));
+        
+        % Periodogram
+        spect = fftshift(abs(fft(x,P))/N).^2; % periodogram
         spect = spect(P/2+1:end);
         if sum(spect) > 1e-8
             per = combFilter(spect,1,4);
             tones(k,3) = ff(min(sort(findpeaks(spect,d)))); % estimated base freq
         end
-        k = k+1;
+        
+        % q-Spice
+%         A  = exp( 2i*pi*(1:N)'*ff );
+%         [p,~,R] = q_SPICE( x, A, 2, 1e-4 );             % q=2
+%         tmp = R\x;
+%         sSpice = zeros(P,1);
+%         for m=1:P
+%             sSpice(m) = abs( p(m)*(A(:,m)'*tmp) );
+%         end
+%         tones(k,5) = min(sort(findpeaks(sSpice)));
+%         k = k+1;
     end
 end
 
