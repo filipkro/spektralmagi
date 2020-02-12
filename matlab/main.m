@@ -10,6 +10,7 @@ for ch=1:5
     sequence = hilbert(audioread(sprintf("/recordings/txtcor%i.wav",ch)));
     txtcor(:,ch) = decimate(sequence, dsfactor);
 end
+%%
 for ch=1:5
     sequence = hilbert(audioread(sprintf("/recordings/naacor%i.wav",ch)));
     naacor(:,ch) = decimate(sequence, dsfactor);
@@ -26,7 +27,7 @@ clear sequence
 
 
 %% Reads midi file
-midi = readmidi("/Users/erikstalberg/Documents/1Studier/Spektralanalys/project/score/correct.mid");
+midi = readmidi("project/score/correct.mid");
 
 midinotes = midiInfo(midi,0);
 midinotes(:,5:6) = midinotes(:,5:6) + 3;
@@ -96,7 +97,7 @@ scatter(tones(:,1),tones(:,2)./qtone,"r^")
 scatter(tones(:,1),tones(:,2).*qtone,"rV")
 
 %%
-voice = 1;
+voice = 4;
 track = naacor(:,voice);
 
 d    = 1; % peaks to look for
@@ -106,7 +107,7 @@ P    = 2.^12;
 ff   = (0:(P/2-1))/P*fs; 
 N    = length(track);
 
-peaks = zeros(wnum,1);
+peaks = zeros(wnum,2);
 
 ifplot = 0;
 plotstop = 1500;
@@ -123,6 +124,12 @@ for t=1:wnum-1
     if sum(spect) > 1e-4
         per = combFilter(spect,1,[],4, -0.01); % -0.01
         peaks(t,1) = ff(sort(findpeaks(per,1)));
+        
+        if peaks(t,1) < 80
+            figure
+            semilogy(ff,spect)
+            title(sprintf('Comb peak: %f', peaks(t,1)))
+        end
     end
     if t == plotstop && ifplot
         plot(ff,per,"--")
