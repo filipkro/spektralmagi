@@ -40,7 +40,7 @@ ff   = ((0:P-1)/P-0.5);
 cut  = 0.0375;
 
 qspice = zeros(sum(midinotes(:,1) == voice),4);
-qspice = zeros(512,260);
+qspice = zeros(
 
 k = 1;
 for i=1:length(midinotes)
