@@ -25,65 +25,12 @@ end
 clear sequence
 
 %% Reads midi file
-midi = readmidi("/Users/erikstalberg/Documents/1Studier/Spektralanalys/project/score/correct.mid");
+midi = readmidi("correct.mid");
 midinotes = midiInfo(midi,0);
 midinotes(:,5:6) = midinotes(:,5:6) + 3;
 midinotes(:,3) = midi2freq(midinotes(:,3)); % mito notes to frequencies
 qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka error margin
 
-%% Spectral estimation for each tone
-voice = 4;
-tones = zeros(sum(midinotes(:,1) == voice),5);
-
-d    = 3; % peaks to look for
-P    = 512;
-ff   = (0:(P-1))/P*fs; 
-cut  = 0.0375;
-
-k = 1;
-for i=1:length(midinotes)
-    if midinotes(i,1) == voice
-        tstart = midinotes(i,5)+cut;
-        tend   = midinotes(i,6)-cut;
-        tindex = round(tstart*fs):round(tend*fs);
-        N      = length(tindex);
-        tones(k,1) = mean([tstart tend]); % Mean time of note
-        tones(k,2) = midinotes(i,3);
-        x = txtcor(tindex,voice); % sound sequence
-        
-        % Relax
-        %[fRelax, ~] = relax(x,d);
-        %tones(k,4) = min(sort(fs*fRelax/2/pi));
-        
-        % Periodogram
-        spect = fftshift(abs(fft(x,P))/N).^2; % periodogram
-        spect = spect(P/2+1:end);
-        if sum(spect) > 1e-8
-            per = combFilter(spect,1,4);
-            tones(k,3) = ff(min(sort(findpeaks(spect,d)))); % estimated base freq
-        end
-        
-        % q-Spice
-%         A  = exp( 2i*pi*(1:N)'*ff );
-%         [p,~,R] = q_SPICE( x, A, 2, 1e-4 );             % q=2
-%         tmp = R\x;
-%         sSpice = zeros(P,1);
-%         for m=1:P
-%             sSpice(m) = abs( p(m)*(A(:,m)'*tmp) );
-%         end
-%         tones(k,5) = min(sort(findpeaks(sSpice)));
-%         k = k+1;
-    end
-end
-
-%%
-figure
-semilogy(tones(:,1),tones(:,3),"x")
-hold on
-semilogy(tones(:,1),tones(:,4),"o")
-legend("Periodogram","Relax")
-scatter(tones(:,1),tones(:,2)./qtone,"r^")
-scatter(tones(:,1),tones(:,2).*qtone,"rV")
 
 %%
 voice = 1;
