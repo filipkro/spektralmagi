@@ -25,7 +25,7 @@ end
 clear sequence
 
 %% Reads midi file
-midi = readmidi("/Users/erikstalberg/Documents/1Studier/Spektralanalys/project/score/correct.mid");
+midi = readmidi("correct.mid");
 midinotes = midiInfo(midi,0);
 midinotes(:,5:6) = midinotes(:,5:6) + 3;
 midinotes(:,3) = midi2freq(midinotes(:,3)); % mito notes to frequencies
@@ -33,7 +33,7 @@ qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka erro
 
 
 %%
-voice = 5;
+voice = 1;
 track = naacor(:,voice);
 
 d    = 1; % peaks to look for
