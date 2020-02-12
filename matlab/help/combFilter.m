@@ -10,12 +10,12 @@ end
 
 inharmonicity = @(k, B) sqrt(1+B*k.^2);
 
-Y = zeros(N,1);
+Y = zeros(size(X));
 
 for f=limits(1):limits(2)
     k=1;
     while  (k <= kmax) && (f*k <= N)
-        Y(f) = Y(f) + X(round(f*k*inharmonicity(k,bias)))*decay.^(k-1);
+        Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)),:)*decay.^(k-1);
         k = k+1;
     end
 end

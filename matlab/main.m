@@ -7,22 +7,17 @@ fs = fs/dsfactor;
 %% Loads data
 clear txtcor naacor txtinc naainc
 for ch=1:5
-    sequence = hilbert(audioread(sprintf("/recordings/txtcor%i.wav",ch)));
-    txtcor(:,ch) = decimate(sequence, dsfactor);
+    txtcor(:,ch) = hilbert(audioread(sprintf("/recordings/txtcor%i.wav",ch)));
+    naacor(:,ch) = hilbert(audioread(sprintf("/recordings/naacor%i.wav",ch)));
+    txtinc(:,ch) = hilbert(audioread(sprintf("/recordings/txtinc%i.wav",ch)));
+    naainc(:,ch) = hilbert(audioread(sprintf("/recordings/naainc%i.wav",ch)));
 end
-for ch=1:5
-    sequence = hilbert(audioread(sprintf("/recordings/naacor%i.wav",ch)));
-    naacor(:,ch) = decimate(sequence, dsfactor);
-end
-for ch=1:5
-    sequence = hilbert(audioread(sprintf("/recordings/txtinc%i.wav",ch)));
-    txtinc(:,ch) = decimate(sequence, dsfactor);
-end
-for ch=1:5
-    sequence = hilbert(audioread(sprintf("/recordings/naainc%i.wav",ch)));
-    naainc(:,ch) = decimate(sequence, dsfactor);
-end
-clear sequence
+
+txtcor = decimate(txtcor(1:2:end,:), dsfactor/2);
+naacor = decimate(naacor(1:2:end,:), dsfactor/2);
+txtinc = decimate(txtinc(1:2:end,:), dsfactor/2);
+naainc = decimate(naainc(1:2:end,:), dsfactor/2);
+
 
 %% Reads midi file
 midi = readmidi("correct.mid");
@@ -33,7 +28,7 @@ qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka erro
 
 
 %%
-voice = 1;
+voice = 5;
 track = naacor(:,voice);
 
 d    = 1; % peaks to look for
@@ -43,6 +38,7 @@ P    = 2.^12;
 ff   = (0:(P/2-1))/P*fs; 
 N    = length(track);
 
+%%
 peaks = zeros(wnum,1);
 
 ifplot = 0;
@@ -73,4 +69,18 @@ plot((wlen:wlen:N)./fs,movmedian(peaks,37),".")
 
 %%
 
+newPeaks = zeros(wnum,1);
 
+spectro = spectrogram(track,wlen,0,P,fs,"reassigned");
+spectro = abs(spectro);
+spectro = combFilter(spectro,1,[],4, -0.01);
+
+for i=1:wnum
+    if sum(spectro(:,i)) > 1e-2
+        newPeaks(i) = findpeaks(spectro(:,i),1);
+    end
+end
+
+figure
+plotparts(midinotes,voice)
+plot((wlen:wlen:N)./fs,newPeaks,".")
