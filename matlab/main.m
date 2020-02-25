@@ -7,35 +7,11 @@ fs = fs/dsfactor;
 %% Loads data
 clear txtcor naacor txtinc naainc
 for ch=1:5
-    txtcor(:,ch) = audioread(sprintf("/recordings/txtcor%i.wav",ch));
-    naacor(:,ch) = hilbert(audioread(sprintf("/recordings/naacor%i.wav",ch)));
-    txtinc(:,ch) = hilbert(audioread(sprintf("/recordings/txtinc%i.wav",ch)));
-    naainc(:,ch) = hilbert(audioread(sprintf("/recordings/naainc%i.wav",ch)));
+    txtcor(:,ch) = decimate(audioread(sprintf("/recordings/txtcor%i.wav",ch)), dsfactor);
+    naacor(:,ch) = decimate(audioread(sprintf("/recordings/naacor%i.wav",ch)), dsfactor);
+    txtinc(:,ch) = decimate(audioread(sprintf("/recordings/txtinc%i.wav",ch)), dsfactor);
+    naainc(:,ch) = decimate(audioread(sprintf("/recordings/naainc%i.wav",ch)), dsfactor);
 end
-
-%%
-for ch=1:5
-    sequence = hilbert(audioread(sprintf("/recordings/naacor%i.wav",ch)));
-    naacor(:,ch) = decimate(sequence, dsfactor);
-end
-for ch=1:5
-    sequence = hilbert(audioread(sprintf("/recordings/txtinc%i.wav",ch)));
-    txtinc(:,ch) = decimate(sequence, dsfactor);
-end
-for ch=1:5
-    sequence = hilbert(audioread(sprintf("/recordings/naainc%i.wav",ch)));
-    naainc(:,ch) = decimate(sequence, dsfactor);
-end
-clear sequence
-
-% 
-% txtcor = decimate(txtcor(1:2:end,:), dsfactor/2);
-% naacor = decimate(naacor(1:2:end,:), dsfactor/2);
-% txtinc = decimate(txtinc(1:2:end,:), dsfactor/2);
-% naainc = decimate(naainc(1:2:end,:), dsfactor/2);
-
-
-
 
 %% Reads midi file
 
@@ -45,7 +21,6 @@ midinotes = midiInfo(midi,0);
 midinotes(:,5:6) = midinotes(:,5:6) + 3;
 midinotes(:,3) = midi2freq(midinotes(:,3)); % mito notes to frequencies
 qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka error margin
-
 
 %% Spectral estimation for each tone
 voice = 4;
@@ -85,13 +60,13 @@ for i=1:length(midinotes)
         
 
         % Estimate the pseudo-spectra using q-SPICE.
-        A  = exp( 2i*pi*(1:length(x))'*ff );
-        [p,~,R] = q_SPICE( x, A, 2, 1e-4 );             % q=2
-        tmp = R\x;
+%         A  = exp( 2i*pi*(1:length(x))'*ff );
+%         [p,~,R] = q_SPICE( x, A, 2, 1e-4 );             % q=2
+%         tmp = R\x;
 
-        for m=1:length(x)
-            sSpice(m) = abs(p(m)*(A(:,m)'*tmp));
-        end
+%         for m=1:length(x)
+%             sSpice(m) = abs(p(m)*(A(:,m)'*tmp));
+%         end
         
         %qspice(k, = min(findpeaks(sSpice21,d));
         
@@ -109,13 +84,11 @@ legend("Periodogram","Relax")
 scatter(tones(:,1),tones(:,2)./qtone,"r^")
 scatter(tones(:,1),tones(:,2).*qtone,"rV")
 
-%%
-voice = 4;
-
 
 %%
-voice = 5;
+voice = 1;
 track = naacor(:,voice);
+
 
 d    = 1; % peaks to look for
 wlen = floor(fs*0.02); % 20 ms
@@ -124,45 +97,68 @@ P    = 2.^12;
 ff   = (0:(P/2-1))/P*fs; 
 N    = length(track);
 
+idx = midinotes(:,1)==voice;
+chvoice = midinotes(idx,:);
+minfreq = floor(0.9*min(chvoice(:,3))/ff(end)*length(ff));
+%
+peaks = zeros(wnum,2);
 
-%%
-peaks = zeros(wnum,1);
-
-
-ifplot = 0;
-plotstop = 1500;
+count = 0;
+eratio = zeros(wnum-1,1);
 for t=1:wnum-1
-    %disp(t)
     x = track((t-1)*wlen+1:t*wlen);
+    
+    xacf = acf(x,floor(wlen/4));
+    
+%     if t == round(6.8961e+02)
+%         figure
+%         stem(xacf)
+%     end
+
+    
+    
     spect = fftshift(abs(fft(x,P))/wlen).^2;   % periodogram
     spect = spect(P/2+1:end);
-    if t == plotstop && ifplot
-        plot(ff,spect)
-        hold on
-    end
-    if sum(spect) > 1e-3
-        per = combFilter(spect,1,[],4, -0.01); % -0.01
+    [~, epeaks] = findpeaks(spect, 2);
+    eratio(t) = sum(epeaks)/sum(spect);
+    if sum(spect) > 1e-5 && max(abs(xacf(5:end))) > 0.1 && eratio(t) > 0.01
+        per = combFilter(spect,1,[minfreq, length(spect)],4, 0, 0); % -0.01
         peaks(t,1) = ff(sort(findpeaks(per,1)));
-        
-%         if peaks(t,1) < 80
+
+%         if peaks(t,1) < 80 && count < 5
+%             figure
+%             stem(xacf)
+%             count = count +1;
 %             figure
 %             semilogy(spect)
-%             title(sprintf('Comb peak: %f', peaks(t,1)))
+%         end
+%         if count == 6 && peaks(t,1) > 120
+%             figure
+%             semilogy(spect)
 %         end
     end
-    if t == plotstop && ifplot
-        plot(ff,per,"--")
+    if t==2810
+        
+        figure
+        stem(xacf)
+        
+        
+        figure
+        plot(ff,spect)
+        title('spect-t=2810')
+        figure
+        plot(ff,per)
+        title('per-t=2810')
     end
-    x = real(x);
-    peaks(t,2) = yin_mgc(x, 60, 500, fs); % Yin algorithm
-end
+    %peaks(t,2) = yin_mgc(x,180,350,fs);
+    end
 
 figure
-%plotparts(midinotes,voice)
-%plot((wlen:wlen:N)./fs,peaks,".")
+plotparts(midinotes,voice)
+plot((wlen:wlen:N)./fs,peaks,".")
 %plot((wlen:wlen:N)./fs,movmedian(peaks,37),".")
 
-%%
+%% Using built in 
 
 newPeaks = zeros(wnum,1);
 

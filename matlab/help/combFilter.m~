@@ -25,12 +25,7 @@ for f=limits(1):limits(2)
         Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)),:)*decay.^(k-1);
         if nbrSum>0
             for l=1:nbrSum
-                if round(f*k*inharmonicity(k,bias)+l) < length(X)
-                    Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)-l),:)*decay.^(k-1)*0.4.^(l-1);
-                    Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)+l),:)*decay.^(k-1)*0.4.^(l-1);
-                end
-            end
-        end
+                Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)-l),:)*decay.^(k-1)*0.7.^(l-1);
         k = k+1;
     end
 end
