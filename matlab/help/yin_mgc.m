@@ -10,7 +10,7 @@ function [pitch,minamp] = yin(frame,minpitch,maxpitch,fs)
 % "Step 6" of the original paper is not implemented, instead a simpler
 % approach of forward/backward estimation is used
 %
-% [pitch,minamp] = pitchEstimate_YIN(frame,setup)
+% [pitch,minamp] = pitchEstimate_YIN(frame,minpitch,maxpitch,fs)
 %
 % Input:
 %       frame: Current frame of length L
