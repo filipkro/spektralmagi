@@ -1,14 +1,15 @@
 clear all
 close all
 
-addpath(genpath('../..'))
+run setup.m
 
 dsfactor = 1; % multiple of 2
 fs = 44100;
 fs = fs/dsfactor;
 voice = 4;
 
-run load_data
+% dont forget to set dsfactor and downsample as you like after running setup.m!
+
 
 track = naacor(:,voice);
 d    = 1; % peaks to look for

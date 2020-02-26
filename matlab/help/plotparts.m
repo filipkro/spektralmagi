@@ -1,5 +1,7 @@
+% plots the boxes i.e. the allowed interval for the estimatied frequencies
 %
-%
+% 
+
 function plotparts(midinotes, parts, errormargin)
 
 if nargin < 3

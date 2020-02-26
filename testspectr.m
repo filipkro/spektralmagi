@@ -5,10 +5,8 @@ run paths.m
 %%
 midi = readmidi("correct.mid");
 notes = midiInfo(midi,0);
-
 notesFreq = notes;
 notesFreq(:,3) = midi2freq(notes(:,3));
-
 qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2);
 
 %%

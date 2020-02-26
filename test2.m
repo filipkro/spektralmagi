@@ -3,6 +3,8 @@ close all
 
 run paths.m
 
+% dont forget to set dsfactor and downsample as you like after running setup.m!
+
 %% load midi - eval one channel
 midi = readmidi("correct.mid");
 notes = midiInfo(midi,0);
