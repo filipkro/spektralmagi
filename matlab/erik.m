@@ -19,11 +19,11 @@ midinotes = midiInfo(midi,0);
 midinotes(:,5:6) = midinotes(:,5:6) + 3;
 midinotes(:,3) = midi2freq(midinotes(:,3)); % mito notes to frequencies
 qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka error margin
-midinotes = midinotes(:,[1 3 5 6]);
+midinotes2 = midinotes(:,[1 3 5 6]);
 notes = cell(5,1);
 
 for i=1:5
-    n = midinotes(midinotes(:,1) == i,:);
+    n = midinotes2(midinotes2(:,1) == i,:);
     notes{i} = n(:,2:end);
 end
 
@@ -173,3 +173,13 @@ legend(algs)
 %%
 [s,t,ff] = SIH(track,fs,5);
 peaks    = findpeaks(s,fs);
+
+%%
+voice = 1;
+track = txtcor(:,voice);
+[f, t] = swipep(track,fs,[30, 800],0.005,[],[],0.3);
+%plotparts(midinotes,voice)
+%plot(t,f,".")
+peaks = [t movmedian(f,10)];
+comparison = comparenotes(peaks,notes{voice},1,1.03)
+plot(t,peaks(:,2),".")
