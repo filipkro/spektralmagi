@@ -86,7 +86,7 @@ scatter(tones(:,1),tones(:,2).*qtone,"rV")
 
 
 %%
-voice = 1;
+voice = 3;
 track = naacor(:,voice);
 
 
@@ -102,6 +102,7 @@ chvoice = midinotes(idx,:);
 minfreq = floor(0.9*min(chvoice(:,3))/ff(end)*length(ff));
 %
 peaks = zeros(wnum,2);
+yin_peaks = zeros(wnum,1);
 
 count = 0;
 eratio = zeros(wnum-1,1);
@@ -121,9 +122,11 @@ for t=1:wnum-1
     spect = spect(P/2+1:end);
     [~, epeaks] = findpeaks(spect, 2);
     eratio(t) = sum(epeaks)/sum(spect);
+    
     if sum(spect) > 1e-5 && max(abs(xacf(5:end))) > 0.1 && eratio(t) > 0.01
         per = combFilter(spect,1,[minfreq, length(spect)],4, 0, 0); % -0.01
         peaks(t,1) = ff(sort(findpeaks(per,1)));
+        yin_peaks(t) = yin_mgc(x,80,500,fs);
 
 %         if peaks(t,1) < 80 && count < 5
 %             figure
@@ -156,6 +159,8 @@ for t=1:wnum-1
 figure
 plotparts(midinotes,voice)
 plot((wlen:wlen:N)./fs,peaks,".")
+hold on
+plot((wlen:wlen:N)./fs,yin_peaks,'g.')
 %plot((wlen:wlen:N)./fs,movmedian(peaks,37),".")
 
 %% Using built in 
