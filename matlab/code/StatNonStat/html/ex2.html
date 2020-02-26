@@ -1,0 +1,444 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ex2</title><meta name="generator" content="MATLAB 9.7"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-02-07"><meta name="DC.source" content="ex2.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">addpath(genpath(<span class="string">"../"</span>))
+
+<span class="comment">% Example of beamforming of coherent and non-coherent sources, with a</span>
+<span class="comment">% calibrated or un-calibrated ULA.</span>
+<span class="comment">%</span>
+<span class="comment">% Try running the code with coherent (cohS) and non-coherent sources; also</span>
+<span class="comment">% try with/without calibration errors (pert). Run it a few times for each</span>
+<span class="comment">% setting to get a feel for how the results vary depending on the</span>
+<span class="comment">% realization. Also try to change the source separation, the number of</span>
+<span class="comment">% sensors, the noise level, the level of perturbation (epsilon_pert), and</span>
+<span class="comment">% the number of measurements.</span>
+<span class="comment">%</span>
+<span class="comment">% By Andreas Jakobsson, 200125</span>
+clear; close <span class="string">all</span>;
+
+<span class="comment">% Settings</span>
+cohS = 0;               <span class="comment">% Set this to have coherent sources.</span>
+pert = 0;               <span class="comment">% Set this to add calibration errors.</span>
+
+N = 64;                 <span class="comment">% Number of measurements</span>
+m = 10;                 <span class="comment">% Number of sensors</span>
+c = 2;
+d = 0.5;                <span class="comment">% Sensor spacing in wavelengths.</span>
+Padd = 1024;             <span class="comment">% Size of the spatial frequency grid.</span>
+Dtheta = @(theta, c, m) c/(m*abs(cos(theta/180*pi)))*180/pi;
+theta1 = -30;
+theta2 = theta1 + Dtheta(theta1, c, m);
+doaV   = [theta1 theta2];   <span class="comment">% Angle of arrivals.</span>
+epsilon_pert = 0.5;     <span class="comment">% Array perturbation.</span>
+sigAmp = [ 10 10];   <span class="comment">% Source amplitudes</span>
+noA  = length(doaV);    <span class="comment">% Number of assumed sources.</span>
+
+<span class="comment">% Generate some spatial data.</span>
+calStr = <span class="string">'out'</span>;
+cohStr = <span class="string">'non-'</span>;
+sig = zeros(m,N);
+tmp = ( randn(1,N) + 1i*randn(1,N) )/sqrt(2);
+<span class="keyword">for</span> k=1:length(doaV)
+    A  = exp( -pi*1i*sin(doaV(k)*pi/180)'*(0:m-1) ).';
+    <span class="keyword">if</span> pert
+        A = A + sqrt(epsilon_pert)*(randn(m,1)+1i*randn(m,1))/sqrt(2);
+        calStr = <span class="string">''</span>;
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> cohS
+        sig = sig + A * sigAmp(k) * tmp * (randn+randn*1i);
+        cohStr = <span class="string">''</span>;
+    <span class="keyword">else</span>
+        sig = sig + A * sigAmp(k) * ( randn(1,N) + 1i*randn(1,N) )/sqrt(2);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+n = 2*( randn(m,N) + 1i*randn(m,N) )/sqrt(2);
+y = sig + n;
+
+<span class="comment">% Estimate beampattern and DOAs.</span>
+ff = linspace(-90,90,Padd);
+phiB = beamform( y, Padd, d )/m/m;    doaB = findpeaks(phiB,noA);     doaB = sort( ff(doaB) );
+phiC = capon_sp( y, Padd, d );        doaC = findpeaks(phiC,noA);     doaC = sort( ff(doaC) );
+phiA = sapes( y, Padd );              doaA = findpeaks(phiA ,noA);    doaA = sort( ff(doaA) );
+phiR = rcb( y*y'/N, Padd );           doaR = findpeaks(phiR ,noA);    doaR = sort( ff(doaR) );
+doaM = sort( root_music_doa( y, noA, d ) )';
+doaE = sort( esprit_doa( y, noA, d ) )';
+doaW = sort( -MODE( y*y'/N, noA, 1 ) )'*180/pi;
+
+ang2idx  = @(angle, padd) round((angle+90)/180*(padd-1));
+resolved = @(spectrum, angles ,padd) sum(spectrum(ang2idx(angles, padd))) &gt; 2*spectrum(ang2idx(mean(angles),padd));
+
+disp(resolved(phiB,doaV,Padd))
+
+<span class="comment">% Plot the resulting spatial spectra.</span>
+figure
+pax = polaraxes;
+polarplot( pax, ff*pi/180, [log(phiB') ; log(phiC') ; log(phiA') ] )
+pax.ThetaLim = [-90 90];
+pax.ThetaZeroLocation = <span class="string">'top'</span>;
+title(<span class="string">'Beampattern in polar coordinates'</span>)
+legend(<span class="string">'Location'</span>, <span class="string">'southoutside'</span>)
+legend(<span class="string">'Beamforming'</span>,<span class="string">'Capon'</span>,<span class="string">'SAPES FB'</span>)
+</pre><pre class="codeoutput">   1
+
+</pre><img vspace="5" hspace="5" src="ex2_01.png" alt=""> <pre class="codeinput">figure
+pax = polaraxes;
+polarplot( pax, ff*pi/180, [log(phiB') ; log(phiR') ] )
+pax.ThetaLim = [-90 90];
+pax.ThetaZeroLocation = <span class="string">'top'</span>;
+title(<span class="string">'Beampattern in polar coordinates'</span>)
+legend(<span class="string">'Location'</span>, <span class="string">'southoutside'</span>)
+legend(<span class="string">'Beamforming'</span>,<span class="string">'RCB'</span>)
+
+figure
+vecDoa = NaN*phiB;
+vecDoa( round((doaV/180+.5)*Padd)+1 ) = sigAmp(1:noA);
+semilogy( ff, [ abs(phiB) abs(phiC) abs(phiA) ] );
+hold <span class="string">on</span>
+semilogy( ff, vecDoa, <span class="string">'x'</span> );
+hold <span class="string">off</span>
+axis([-90 90 0 1000])
+title(<span class="string">'Beampattern in spatial frequencies'</span>)
+legend(<span class="string">'Beamforming'</span>,<span class="string">'Capon'</span>,<span class="string">'SAPES FB'</span>)
+
+figure
+vecDoa = NaN*phiB;
+vecDoa( round((doaV/180+.5)*Padd)+1 ) = sigAmp(1:noA);
+semilogy( ff, [ abs(phiB) abs(phiR)] );
+hold <span class="string">on</span>
+semilogy( ff, vecDoa, <span class="string">'x'</span> );
+hold <span class="string">off</span>
+axis([-90 90 0 1000])
+title(<span class="string">'Beampattern in spatial frequencies'</span>)
+legend(<span class="string">'Beamforming'</span>,<span class="string">'RCB'</span>)
+</pre><img vspace="5" hspace="5" src="ex2_02.png" alt=""> <img vspace="5" hspace="5" src="ex2_03.png" alt=""> <img vspace="5" hspace="5" src="ex2_04.png" alt=""> <pre class="codeinput">ang2idx  = @(angle, padd) round((angle+90)/180*(padd-1));
+resolved = @(spectrum, angles ,padd) sum(spectrum(ang2idx(angles, padd))) &gt; 2*spectrum(ang2idx(mean(angles),padd));
+
+
+<span class="comment">% Present DOA estimates.</span>
+fprintf(<span class="string">'Beamforming of %scoherent sources, with%s calibration errors.\n'</span>,cohStr, calStr);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'True DOAs:       '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaV)), <span class="string">' '</span>);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'  Beamformer:    '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaB)), <span class="string">' '</span>);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'  Capon:         '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaC)), <span class="string">' '</span>);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'  SAPES FB:      '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaA)), <span class="string">' '</span>);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'  RCB:           '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaR)), <span class="string">' '</span>);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'  MUSIC:         '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaM)), <span class="string">' '</span>);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'  ESPRIT:        '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaE)), <span class="string">' '</span>);
+fprintf(<span class="string">'%s%s\b\b%s\n'</span>, <span class="string">'  WSF:           '</span>, sprintf(<span class="string">'%f, '</span>,sort(doaW)), <span class="string">' '</span>);
+</pre><pre class="codeoutput">Beamforming of non-coherent sources, without calibration errors.
+True DOAs:       -30.000000, -16.768107 
+  Beamformer:    -29.648094, -16.979472 
+  Capon:         -29.824047, -16.627566 
+  SAPES FB:      -28.944282, -17.507331 
+  RCB:           -27.536657, -18.563050 
+  MUSIC:         -29.980547, -16.756554 
+  ESPRIT:        -29.944425, -16.736126 
+  WSF:           -29.979363, -16.753601 
+</pre><pre class="codeinput">c = zeros(18,3);
+c(:,1) = (-85:5:0)';
+
+
+i = 1;
+<span class="keyword">for</span> theta1 = -85:5:0
+
+    cLower = 0.1;                 <span class="comment">% Initial lower bound</span>
+    cUpper = (100+theta1)/10; <span class="comment">% Initial upper bound, changes due to index error otherwise</span>
+    <span class="keyword">while</span> cUpper-cLower &gt; 0.1 <span class="comment">% c accuracy limit</span>
+
+        cMid = mean([cLower, cUpper]); <span class="comment">% The c currently in question</span>
+
+        theta2 = theta1 + Dtheta(theta1, cMid, m); <span class="comment">% theta2 depending on this c</span>
+        doaV   = [theta1 theta2]; <span class="comment">% accurate angles</span>
+
+        <span class="comment">% -v-v- calculate y -v-v-</span>
+        <span class="keyword">for</span> k=1:length(doaV)
+            A  = exp( -pi*1i*sin(doaV(k)*pi/180)'*(0:m-1) ).';
+            <span class="keyword">if</span> pert
+                A = A + sqrt(epsilon_pert)*(randn(m,1)+1i*randn(m,1))/sqrt(2);
+                calStr = <span class="string">''</span>;
+            <span class="keyword">end</span>
+            <span class="keyword">if</span> cohS
+                sig = sig + A * sigAmp(k) * tmp * (randn+randn*1i);
+                cohStr = <span class="string">''</span>;
+            <span class="keyword">else</span>
+                sig = sig + A * sigAmp(k) * ( randn(1,N) + 1i*randn(1,N) )/sqrt(2);
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+        n = 2*( randn(m,N) + 1i*randn(m,N) )/sqrt(2);
+        y = sig + n;
+        <span class="comment">% -^-^- calculate y -^-^-</span>
+
+        phiB = beamform( y, Padd, d )/m/m;
+        <span class="comment">%phiC = capon_sp( y, Padd, d ); % capon method</span>
+
+        <span class="comment">% change limits</span>
+        <span class="keyword">if</span> resolved(phiB, doaV, Padd)
+            cUpper = cMid;
+        <span class="keyword">else</span>
+            cLower = cMid;
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    c(i,2) = cMid;
+    c(i,3) = theta2;
+    i = i+1;
+<span class="keyword">end</span>
+
+hold <span class="string">on</span>
+plot(c(:,1),c(:,2))
+<span class="comment">% yyaxis right</span>
+<span class="comment">% hold on</span>
+<span class="comment">% plot(c(:,1),c(:,3))</span>
+</pre><img vspace="5" hspace="5" src="ex2_05.png" alt=""> <p><img src="ex2_eq15682195134482745114.png" alt="$x^2+e^{\pi i}$" style="width:36px;height:11px;"></p><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+addpath(genpath("../"))
+
+% Example of beamforming of coherent and non-coherent sources, with a
+% calibrated or un-calibrated ULA.
+%
+% Try running the code with coherent (cohS) and non-coherent sources; also
+% try with/without calibration errors (pert). Run it a few times for each
+% setting to get a feel for how the results vary depending on the
+% realization. Also try to change the source separation, the number of
+% sensors, the noise level, the level of perturbation (epsilon_pert), and
+% the number of measurements.
+%
+% By Andreas Jakobsson, 200125
+clear; close all; 
+
+% Settings
+cohS = 0;               % Set this to have coherent sources.
+pert = 0;               % Set this to add calibration errors.
+
+N = 64;                 % Number of measurements
+m = 10;                 % Number of sensors
+c = 2;
+d = 0.5;                % Sensor spacing in wavelengths.
+Padd = 1024;             % Size of the spatial frequency grid.
+Dtheta = @(theta, c, m) c/(m*abs(cos(theta/180*pi)))*180/pi;
+theta1 = -30;
+theta2 = theta1 + Dtheta(theta1, c, m);
+doaV   = [theta1 theta2];   % Angle of arrivals.
+epsilon_pert = 0.5;     % Array perturbation. 
+sigAmp = [ 10 10];   % Source amplitudes
+noA  = length(doaV);    % Number of assumed sources.
+
+% Generate some spatial data.
+calStr = 'out';        
+cohStr = 'non-';
+sig = zeros(m,N);
+tmp = ( randn(1,N) + 1i*randn(1,N) )/sqrt(2);
+for k=1:length(doaV)
+    A  = exp( -pi*1i*sin(doaV(k)*pi/180)'*(0:m-1) ).';
+    if pert
+        A = A + sqrt(epsilon_pert)*(randn(m,1)+1i*randn(m,1))/sqrt(2);
+        calStr = '';
+    end
+    if cohS
+        sig = sig + A * sigAmp(k) * tmp * (randn+randn*1i);
+        cohStr = '';
+    else
+        sig = sig + A * sigAmp(k) * ( randn(1,N) + 1i*randn(1,N) )/sqrt(2);
+    end
+end
+n = 2*( randn(m,N) + 1i*randn(m,N) )/sqrt(2);
+y = sig + n;
+  
+% Estimate beampattern and DOAs.
+ff = linspace(-90,90,Padd);
+phiB = beamform( y, Padd, d )/m/m;    doaB = findpeaks(phiB,noA);     doaB = sort( ff(doaB) );
+phiC = capon_sp( y, Padd, d );        doaC = findpeaks(phiC,noA);     doaC = sort( ff(doaC) );
+phiA = sapes( y, Padd );              doaA = findpeaks(phiA ,noA);    doaA = sort( ff(doaA) );
+phiR = rcb( y*y'/N, Padd );           doaR = findpeaks(phiR ,noA);    doaR = sort( ff(doaR) );
+doaM = sort( root_music_doa( y, noA, d ) )';
+doaE = sort( esprit_doa( y, noA, d ) )';
+doaW = sort( -MODE( y*y'/N, noA, 1 ) )'*180/pi;
+
+ang2idx  = @(angle, padd) round((angle+90)/180*(padd-1));
+resolved = @(spectrum, angles ,padd) sum(spectrum(ang2idx(angles, padd))) > 2*spectrum(ang2idx(mean(angles),padd));
+
+disp(resolved(phiB,doaV,Padd))
+
+% Plot the resulting spatial spectra.
+figure
+pax = polaraxes;
+polarplot( pax, ff*pi/180, [log(phiB') ; log(phiC') ; log(phiA') ] )
+pax.ThetaLim = [-90 90];
+pax.ThetaZeroLocation = 'top';
+title('Beampattern in polar coordinates')
+legend('Location', 'southoutside')
+legend('Beamforming','Capon','SAPES FB')
+
+%%
+
+figure
+pax = polaraxes;
+polarplot( pax, ff*pi/180, [log(phiB') ; log(phiR') ] )
+pax.ThetaLim = [-90 90];
+pax.ThetaZeroLocation = 'top';
+title('Beampattern in polar coordinates')
+legend('Location', 'southoutside')
+legend('Beamforming','RCB')
+
+figure
+vecDoa = NaN*phiB;
+vecDoa( round((doaV/180+.5)*Padd)+1 ) = sigAmp(1:noA);
+semilogy( ff, [ abs(phiB) abs(phiC) abs(phiA) ] );
+hold on
+semilogy( ff, vecDoa, 'x' );
+hold off
+axis([-90 90 0 1000])
+title('Beampattern in spatial frequencies')
+legend('Beamforming','Capon','SAPES FB')
+
+figure
+vecDoa = NaN*phiB;
+vecDoa( round((doaV/180+.5)*Padd)+1 ) = sigAmp(1:noA);
+semilogy( ff, [ abs(phiB) abs(phiR)] );
+hold on
+semilogy( ff, vecDoa, 'x' );
+hold off
+axis([-90 90 0 1000])
+title('Beampattern in spatial frequencies')
+legend('Beamforming','RCB')
+
+%%
+ang2idx  = @(angle, padd) round((angle+90)/180*(padd-1));
+resolved = @(spectrum, angles ,padd) sum(spectrum(ang2idx(angles, padd))) > 2*spectrum(ang2idx(mean(angles),padd));
+
+
+% Present DOA estimates.
+fprintf('Beamforming of %scoherent sources, with%s calibration errors.\n',cohStr, calStr);
+fprintf('%s%s\b\b%s\n', 'True DOAs:       ', sprintf('%f, ',sort(doaV)), ' ');
+fprintf('%s%s\b\b%s\n', '  Beamformer:    ', sprintf('%f, ',sort(doaB)), ' ');
+fprintf('%s%s\b\b%s\n', '  Capon:         ', sprintf('%f, ',sort(doaC)), ' ');
+fprintf('%s%s\b\b%s\n', '  SAPES FB:      ', sprintf('%f, ',sort(doaA)), ' ');
+fprintf('%s%s\b\b%s\n', '  RCB:           ', sprintf('%f, ',sort(doaR)), ' ');
+fprintf('%s%s\b\b%s\n', '  MUSIC:         ', sprintf('%f, ',sort(doaM)), ' ');
+fprintf('%s%s\b\b%s\n', '  ESPRIT:        ', sprintf('%f, ',sort(doaE)), ' ');
+fprintf('%s%s\b\b%s\n', '  WSF:           ', sprintf('%f, ',sort(doaW)), ' ');
+
+
+%%
+c = zeros(18,3);
+c(:,1) = (-85:5:0)';
+
+
+i = 1;
+for theta1 = -85:5:0
+    
+    cLower = 0.1;                 % Initial lower bound
+    cUpper = (100+theta1)/10; % Initial upper bound, changes due to index error otherwise
+    while cUpper-cLower > 0.1 % c accuracy limit
+        
+        cMid = mean([cLower, cUpper]); % The c currently in question
+        
+        theta2 = theta1 + Dtheta(theta1, cMid, m); % theta2 depending on this c
+        doaV   = [theta1 theta2]; % accurate angles
+        
+        % -v-v- calculate y -v-v-
+        for k=1:length(doaV)
+            A  = exp( -pi*1i*sin(doaV(k)*pi/180)'*(0:m-1) ).';
+            if pert
+                A = A + sqrt(epsilon_pert)*(randn(m,1)+1i*randn(m,1))/sqrt(2);
+                calStr = '';
+            end
+            if cohS
+                sig = sig + A * sigAmp(k) * tmp * (randn+randn*1i);
+                cohStr = '';
+            else
+                sig = sig + A * sigAmp(k) * ( randn(1,N) + 1i*randn(1,N) )/sqrt(2);
+            end
+        end
+        n = 2*( randn(m,N) + 1i*randn(m,N) )/sqrt(2);
+        y = sig + n;
+        % -^-^- calculate y -^-^- 
+        
+        phiB = beamform( y, Padd, d )/m/m;
+        %phiC = capon_sp( y, Padd, d ); % capon method
+        
+        % change limits
+        if resolved(phiB, doaV, Padd)
+            cUpper = cMid;
+        else
+            cLower = cMid;
+        end
+    end
+    c(i,2) = cMid;
+    c(i,3) = theta2;
+    i = i+1;
+end
+
+hold on
+plot(c(:,1),c(:,2))
+% yyaxis right
+% hold on
+% plot(c(:,1),c(:,3))
+
+%%
+% $x^2+e^{\pi i}$ 
+##### SOURCE END #####
+--></body></html>
