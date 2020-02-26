@@ -12,16 +12,17 @@ run load_data
 
 track = naacor(:,voice);
 d    = 1; % peaks to look for
-wlen = floor(fs*0.04); % 40 ms
+wtime = 0.04; % 40 ms
+wlen = floor(fs*wtime); 
 wnum = floor(length(track)/wlen); % number of windows
 P    = 2.^12;
 ffP   = (0:(P/2-1))/P*fs; 
 N    = length(track);
-peaks = zeros(wnum-1,1);
-yin_peaks = zeros(wnum-1,1);
-swipe_peaks = zeros(wnum-1,1);
+peaks = zeros(wnum,1);
+yin_peaks = zeros(wnum,1);
+swipe_peaks = zeros(wnum,1);
 a = zeros(wnum-1,1);
-eratio = zeros(wnum-1,1);
+eratio = zeros(wnum,1);
 
 %%
 close all
@@ -41,7 +42,54 @@ for t=1:wnum-1
         peaks(t) = sort(findpeaks(per,1));
     end
     [yin_peaks(t), a(t)] = yin_mgc(x,80,500,fs);
-    [swipe_peaks(t),tswipe,s] = swipep(x, fs, [80 500], 0.01, 0.3);
+    %[swipe_peaks(t),tswipe,s] = swipep(x, fs, [80 500], wtime, 0.3);
+end
+%%
+[sp,tp,ss] = swipep(track, fs, [80 500], 0.01, 0.4);
+
+%%
+figure
+plotparts(midinotes,voice)
+hold on
+%plot((wlen:wlen:N)./fs,peaks,".")
+%plot((wlen:wlen:N)./fs,yin_peaks,'.')
+%plot((wlen:wlen:N)./fs,swipe_peaks,'.')
+plot(tp,sp,'.')
+%legend('Combfilter','Yin','SWIPE')
+
+
+%%
+%close all
+dt = 0.04;
+sTh = 0.3;
+hilb = 1;
+if hilb
+    fs = fs*2;
+    p = zeros(ceil(length(txtcor(:,1))/2/fs/dt),5);
+    t = zeros(ceil(length(txtcor(:,1))/2/fs/dt),5);
+    s = zeros(ceil(length(txtcor(:,1))/2/fs/dt),5);
+else
+    p = zeros(ceil(length(txtcor(:,1))/fs/dt),5);
+    t = zeros(ceil(length(txtcor(:,1))/fs/dt),5);
+    s = zeros(ceil(length(txtcor(:,1))/fs/dt),5);
+end
+for k=1:5
+    if hilb
+        x = hilbert(txtcor(:,k));
+        x = x(1:2:end);
+    else
+        x = txtcor(:,k);
+    end
+    [p(:,k),t(:,k),s(:,k)] = swipep(x,fs,[30, 800],dt,[],0.1,sTh);
+    if hilb
+        p=p/2;
+    end
+    
+    figure(k+10)
+    plotparts(midinotes,k)
+    hold on
+    plot(t(:,k),p(:,k),'.')
+    title(strcat('Voice: ',sprintf('%d',k)))
 end
 
-[swipe_peaks(t),tswipe,s] = swipep(x, fs, [80 500], 0.01, 0.3);
+

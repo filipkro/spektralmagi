@@ -56,3 +56,42 @@ hold on
 %plot((wlen:wlen:N)./fs,swipe_peaks,'.')
 plot(tp,sp,'.')
 %legend('Combfilter','Yin','SWIPE')
+
+
+%%
+%close all
+fs = 44100;
+dt = 0.04;
+sTh = 0.3;
+hilb = 1;
+if hilb
+    fs = fs/2;
+    p = zeros(ceil(length(txtcor(:,1))/2/fs/dt),5);
+    t = zeros(ceil(length(txtcor(:,1))/2/fs/dt),5);
+    s = zeros(ceil(length(txtcor(:,1))/2/fs/dt),5);
+else
+    p = zeros(ceil(length(txtcor(:,1))/fs/dt),5);
+    t = zeros(ceil(length(txtcor(:,1))/fs/dt),5);
+    s = zeros(ceil(length(txtcor(:,1))/fs/dt),5);
+end
+for k=1:5
+    if hilb
+        x = hilbert(txtcor(:,k));
+        x = x(1:2:end);
+    else
+        x = txtcor(:,k);
+    end
+    [p(:,k),t(:,k),s(:,k)] = swipep(x,fs,[30, 800],dt,[],[],sTh);
+    if hilb
+%         p=p/2;
+%         t = t*2;
+    end
+    
+    figure(k+10)
+    plotparts(midinotes,k)
+    hold on
+    plot(t(:,k),p(:,k),'.')
+    title(strcat('Voice: ',sprintf('%d',k)))
+end
+
+
