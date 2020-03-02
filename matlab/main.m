@@ -1,7 +1,7 @@
 %% Preparation
 addpath(genpath("../")); % add parent directory 
 fs = 44100;
-dsfactor = 8; % multiple of 2
+dsfactor = 10; % multiple of 2
 fs = fs/dsfactor;
 
 %% Loads data
@@ -96,6 +96,9 @@ wnum = floor(length(track)/wlen); % number of windows
 P    = 2.^12;
 ff   = (0:(P/2-1))/P*fs; 
 N    = length(track);
+minfreq = 50;
+maxfreq = 1500;
+
 
 idx = midinotes(:,1)==voice;
 chvoice = midinotes(idx,:);
@@ -108,6 +111,7 @@ count = 0;
 eratio = zeros(wnum-1,1);
 for t=1:wnum-1
     x = track((t-1)*wlen+1:t*wlen);
+
     
     xacf = acf(x,floor(wlen/4));
     
@@ -156,8 +160,20 @@ for t=1:wnum-1
     %peaks(t,2) = yin_mgc(x,180,350,fs);
     end
 
+newPeaks = zeros(size(peaks));
+reldist = @(f1, f2) abs(f1/f2-1);
+rdlimit = 0.05;
+for i=2:(length(peaks)-1)
+    if reldist(peaks(i), peaks(i-1)) < rdlimit && reldist(peaks(i), peaks(i-1)) < rdlimit
+        newPeaks(i) = peaks(i);
+    end
+end
+
+peaks = newPeaks;
+
 figure
 plotparts(midinotes,voice)
+
 plot((wlen:wlen:N)./fs,peaks,".")
 hold on
 plot((wlen:wlen:N)./fs,yin_peaks,'g.')
@@ -172,11 +188,10 @@ spectro = abs(spectro);
 spectro = combFilter(spectro,1,[],4, -0.01);
 
 for i=1:wnum
-    if sum(spectro(:,i)) > 1e-2
-        newPeaks(i) = findpeaks(spectro(:,i),1);
-    end
+    newPeaks(i) = findpeaks(spectro(:,i),1);
 end
 
+%%
 figure
 plotparts(midinotes,voice)
 plot((wlen:wlen:N)./fs,newPeaks,".")
