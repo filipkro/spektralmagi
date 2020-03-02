@@ -1,19 +1,15 @@
 clear all
 close all
 
-addpath(genpath('../'))
-fs = 44100;
+run setup.m
+
 dsfactor = 8; % multiple of 2
+fs = 44100;
 fs = fs/dsfactor;
 voice = 4;
 
+% dont forget to set dsfactor and downsample as you like after running setup.m!
 
-for ch=1:5
-    txtcor(:,ch) = decimate(audioread(sprintf("/recordings/txtcor%i.wav",ch)), dsfactor);
-    naacor(:,ch) = decimate(audioread(sprintf("/recordings/naacor%i.wav",ch)), dsfactor);
-    txtinc(:,ch) = decimate(audioread(sprintf("/recordings/txtinc%i.wav",ch)), dsfactor);
-    naainc(:,ch) = decimate(audioread(sprintf("/recordings/naainc%i.wav",ch)), dsfactor);
-end
 track = naacor(:,voice);
 d    = 1; % peaks to look for
 wlen = floor(fs*0.02); % 20 ms
