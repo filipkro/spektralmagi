@@ -4,11 +4,14 @@ import struct
 import numpy as np
 import pysptk.sptk as sptk
 import time
+import pyqtgraph as pg
+
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
-CHUNK = 13000 #int(wlen*RATE)
+loop = 0.2
+CHUNK = int(loop*RATE) #13000 #int(wlen*RATE)
 wlen = float(CHUNK/RATE)
 
 p = pyaudio.PyAudio()
@@ -41,61 +44,91 @@ fig.canvas.draw()
 
 t = np.linspace(-10,0,num=10*RATE)
 sound = np.zeros(10*RATE)
-dt = int(wlen/10*RATE)
+dt = int(loop/10*RATE)
 pitch = np.zeros(int(10/dt*RATE))
 tp = np.linspace(-10,0,num=len(pitch))
 
+t0 = time.process_time()
 while True:
     # compute something
+    print('loop', time.process_time()-t0)
     t0 = time.process_time()
     data = np.array(struct.unpack(str(CHUNK) + 'h', stream.read(CHUNK,exception_on_overflow = False)))
-    t1 = time.process_time()
-    # print('53',t1-t0)
-
+    t55 = time.process_time()
+    print('get rec ', t55-t0)
     data = data.astype('float64')
     sound = np.roll(sound,-len(data))
+    t59 = time.process_time()
+    print('roll sound ', t59 -t55)
 
-    p = sptk.swipe(data,RATE,dt,min=50,max=500,threshold=0.3)
-    t2 = time.process_time()
-    # print('60',t2-t1)
-    # print(len(sound))
-    pitch = np.roll(pitch,-len(p))
-    # print(len(p))
-    # print(len(pitch))
+    sw = sptk.swipe(data,RATE,dt,min=40,max=700,threshold=0.25)
+    t63 = time.process_time()
+    print('swipe',t63-t59)
+    # print(len(sw))
+    # t2 = time.process_time()
+    # print('Swipe time ',t2-t1)
+
+    pitch = np.roll(pitch,-len(sw))
+    t70 = time.process_time()
+    print('roll pitch ', t70-t63)
+    # print('length from swipe ',len(sw))
+    # print('length of pitch ', len(pitch))
 
 
-    # print(CHUNK)
-    # # print(data)
-
-    print(p)
+    # print('Pitch len ',len(pitch))
+    # print('sw len ', len(sw))
+    # print('pitch time ',dt*len(pitch)/RATE)
 
 
     # print(pitch)
 
     np.put(sound,range(-len(data),-1),data)
-    np.put(pitch,range(-len(p),-1),p)
-    t10 = time.process_time()
+    t84 = time.process_time()
+    print('put sound ', t84-t70)
+    np.put(pitch,range(-len(sw),-1),sw)
+    t87 = time.process_time()
+    print('put pitch ', t87-t84)
+    # t10 = time.process_time()
     # print('75',t10-t2)
     plt.figure(1)
     plt.clf()
-    t3 = time.process_time()
-    # print('78',t3-t10)
+    # t3 = time.process_time()
+    # # print('78',t3-t10)
     plt.plot(t,sound) # plot something
-    t4 = time.process_time()
-    # print('81',t4-t3)
+
     #
     # plt.pause(0.001)  # I ain't needed!!!
     # fig.canvas.draw()
     #
     plt.figure(2)
     plt.clf()
+    t103 = time.process_time()
+    print('clf ', t103-t87)
     plt.plot(tp,pitch,'.') # plot something
 
-
-    plt.pause(0.005)  # I ain't needed!!!
-    t5 = time.process_time()
-    # print('93',t5-t4)
+    t4 = time.process_time()
+    print('plot',t4-t103)
+    # print('Before pause ',t4-t0)
+    # pg.plot(tp, pitch, pen=None, symbol='o')
+    # t5 = time.process_time()
+    # print('Pause',t5-t4)
     fig.canvas.draw()
+    t1 = time.process_time()
+    print('canvas draw',t1-t4)
+    twait = loop - (t1-t0)
+    print('twait ',twait)
+    if twait > 0.0:
+        plt.pause(twait)  # I ain't needed!!!
+        # time.sleep(twait)
+        # time.sleep(0.1)
+    else:
+        plt.pause(0.001)
+    #     time.sleep(1)
+    #     print('wtf')
+    print(time.process_time()-t1)
+
+
+
     # print(time.process_time()-t5)
 
 
