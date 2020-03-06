@@ -15,8 +15,16 @@ class MyWidget(pg.GraphicsWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
-        loop = 0.2
-        # pyaudio stuff
+        loop = 0.2          # time between updates of plot in sec, not faster than 0.15-0.2
+        nbr_pitch = 10      # number of pitches to look for in each loop
+        nbr_sec = 10        # number of seconds to display
+
+        self.setup_pyaudio(loop)
+        self.setup_datavar(nbr_pitch, nbr_sec, loop)
+        self.setup_plot(loop)
+
+
+    def setup_pyaudio(self,loop):
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
         self.RATE = 44100
@@ -33,14 +41,14 @@ class MyWidget(pg.GraphicsWindow):
             frames_per_buffer=self.CHUNK
         )
 
-        nbr_pitch = 10
-        nbr_sec = 10
+    def setup_datavar(self,nbr_pitch,nbr_sec,loop):
         self.t = np.linspace(-nbr_sec,0,num=nbr_sec*self.RATE)
         self.sound = np.zeros(10*self.RATE)
         self.dt = int(loop/nbr_sec*self.RATE)
         self.pitch = np.zeros(int(nbr_pitch/self.dt*self.RATE))
         self.tp = np.linspace(-nbr_sec,0,num=len(self.pitch))
 
+    def setup_plot(self,loop):
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.setLayout(self.mainLayout)
 
@@ -58,8 +66,6 @@ class MyWidget(pg.GraphicsWindow):
             symbolBrush=(255,0,0), symbolSize=5, symbolPen=None)
         self.plotSoundData = self.plotSound.plot()
 
-
-
     def audio_callback(self, in_data, frame_count, time_info, status):
         audio_data = np.frombuffer(in_data, dtype=np.int16)
         audio_data = audio_data.astype('float16')
@@ -69,7 +75,8 @@ class MyWidget(pg.GraphicsWindow):
         return(in_data,pyaudio.paContinue)
 
     def onNewData(self):
-        data = np.array(struct.unpack(str(self.CHUNK) + 'h', self.stream.read(self.CHUNK,exception_on_overflow = False)))
+        # data = np.array(struct.unpack(str(self.CHUNK) + 'h', self.stream.read(self.CHUNK,exception_on_overflow = False)))
+        data = np.frombuffer(self.stream.read(self.CHUNK,exception_on_overflow=False), dtype=np.int16)
         data = data.astype('float64')
         self.sound = np.roll(self.sound,-len(data))
         np.put(self.sound,range(-len(data),-1),data)
@@ -84,7 +91,7 @@ class MyWidget(pg.GraphicsWindow):
 def main():
     app = QtWidgets.QApplication([])
 
-    pg.setConfigOptions(antialias=False) # True seems to work as well
+    pg.setConfigOptions(antialias=True) # True seems to work as well
 
     win = MyWidget()
     win.show()
