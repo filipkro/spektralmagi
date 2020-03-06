@@ -3,12 +3,12 @@
 
 # Online pitch estimation:
 
-packages needed:
-pysptk
-numpy
-pyaudio
-PyQt5 (or PyQt4 or pyside, with minor changes in code)
-pyqtgraph
+packages needed:  
+pysptk  
+numpy  
+pyaudio  
+PyQt5 (or PyQt4 or pyside, with minor changes in code)  
+pyqtgraph  
 
 all available with pip install
 
