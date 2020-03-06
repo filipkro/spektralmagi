@@ -9,6 +9,9 @@ import time
 
 from pysptk.sptk import swipe
 
+# win = None
+# app = None
+
 
 class MyWidget(pg.GraphicsWindow):
 
@@ -18,8 +21,8 @@ class MyWidget(pg.GraphicsWindow):
         loop = 0.2
         # pyaudio stuff
         FORMAT = pyaudio.paInt16
-        CHANNELS   = 1
-        self.RATE  = 44100
+        CHANNELS = 1
+        self.RATE = 44100
         self.CHUNK = int(loop*self.RATE)
 
         p = pyaudio.PyAudio()
@@ -52,42 +55,97 @@ class MyWidget(pg.GraphicsWindow):
         self.plotSwipe = self.addPlot(title="Swipe pitch estimates", row=1, col=0)
         self.plotSound = self.addPlot(title="Sound", row=0, col=0)
 
+        # print(self.plotSwipe.getViewBox())
+
         self.plotDataItem = self.plotSwipe.plot([], pen=None,
             symbolBrush=(255,0,0), symbolSize=5, symbolPen=None)
         self.plotSoundData = self.plotSound.plot()
 
-
+        self.t0 = time.process_time()
+        self.tcallb = time.process_time()
 
     def audio_callback(self, in_data, frame_count, time_info, status):
+
+        # print('callb period: ', time.process_time() - self.tcallb) #this print fucks things up sometimes..
+        self.tcallb = time.process_time()
         audio_data = np.frombuffer(in_data, dtype=np.int16)
         audio_data = audio_data.astype('float16')
+        # print(audio_data)
         self.sound = np.roll(self.sound,-len(audio_data))
         np.put(self.sound,range(-len(audio_data),-1),audio_data)
 
+        # print('in_data: ',len(in_data))
+        # print('audio_data: ', len(audio_data))
         return(in_data,pyaudio.paContinue)
 
+        #np.array(struct.unpack(str(self.CHUNK) + 'h', self.stream.read(self.CHUNK))
+
     def onNewData(self):
+        tp = time.process_time()-self.t0
+        self.t0 = time.process_time()
+        print('tp: ', tp)
+        # try:
+        #     data = np.array(struct.unpack(str(self.CHUNK) + 'h', self.stream.read(self.CHUNK)))#,exception_on_overflow = False)))
+        #
+        # except:
+        #     data = np.take(self.sound,range(-self.CHUNK,-1))
+        #     #data = np.array(struct.unpack(str(self.CHUNK) + 'h', self.stream.read(self.CHUNK,exception_on_overflow = False)))
+        #     print('overflow')
+        # data = data.astype('float64')
+        # print(len(data))
+        # self.sound = np.roll(self.sound,-len(data))
+        #
         data = np.array(struct.unpack(str(self.CHUNK) + 'h', self.stream.read(self.CHUNK,exception_on_overflow = False)))
         data = data.astype('float64')
         self.sound = np.roll(self.sound,-len(data))
         np.put(self.sound,range(-len(data),-1),data)
-        sw = swipe(data,self.RATE,self.dt,min=40,max=1000,threshold=0.2)
+        # data = self.sound[range(-int(tp*self.RATE),-1)]
+
+        # print(-int(tp/self.RATE))
+        # print(len(data))
+        # print(len(self.sound))
+        # print('len data: ', len(data))
+
+        t1 = time.process_time()
+        sw = swipe(data,self.RATE,self.dt,min=40,max=1000,threshold=0.25)
+        # print('swipe time: ', time.process_time()-t1)
+        # print(time.process_time()-t1)
+
         self.pitch = np.roll(self.pitch,-len(sw))
+
         np.put(self.pitch,range(-len(sw),-1),sw)
 
+        t3 = time.process_time()
         self.plotDataItem.setData(self.tp, self.pitch)
+        t4 = time.process_time()
+        # print('plot pitch: ', t4-t3)
         self.plotSoundData.setData(self.t, self.sound)
+        # print('plot sound: ',time.process_time()-t4)
 
 
 def main():
+    # global win, app
     app = QtWidgets.QApplication([])
 
     pg.setConfigOptions(antialias=False) # True seems to work as well
 
     win = MyWidget()
+    app.aboutToQuit.connect(myExitHandler)
     win.show()
+    # win.resize(800,600)
     win.raise_()
     app.exec_()
+
+def myExitHandler():
+    # global win, app
+    time.sleep(0.2)
+    # app = None
+    # print(win.plotSwipe.getViewBox())
+    # win.plotSwipe.clear()
+    # win.plotSound.clear()
+    # print('cleared')
+
+    # del win
 
 if __name__ == "__main__":
     main()
