@@ -18,8 +18,8 @@ class MyWidget(pg.GraphicsWindow):
         loop = 0.2
         # pyaudio stuff
         FORMAT = pyaudio.paInt16
-        CHANNELS = 1
-        self.RATE = 44100
+        CHANNELS   = 1
+        self.RATE  = 44100
         self.CHUNK = int(loop*self.RATE)
 
         p = pyaudio.PyAudio()
