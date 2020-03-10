@@ -1,8 +1,7 @@
 % add everything here that needs to be initialized!
 % this script adds all the paths, sets fs, reads files and midinotes. It
 % also exctracts the valuable information from midinotes (stored in
-% "midiNoTrash") and also divide midiNoTrash into 5 matrices, 1 matrix with
-% information for each singing voice
+% "notes")
 %
 % NOTE: set your own dsfactor and downsample with decimate after running
 % this script! This will allow you to play around as you like with the
