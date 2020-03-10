@@ -12,7 +12,7 @@
 addpath(genpath("../")); % add parent directory 
 fs = 44100;
 
-% 
+%%
 clear txtcor naacor txtinc naainc
 for ch=1:5
     txtcor(:,ch) = audioread(sprintf("/recordings/txtcor%i.wav",ch));
