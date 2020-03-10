@@ -28,10 +28,6 @@ for voice = 1:5 % for every voice
             track = txtinc(:,voice);
         end
         [f, t] = swipep(track,fs,[30, 800],0.005,[],[],0.3);
-        % fComp = f*1.04; % borde kanske ej kompensera, det är väl bara att
-        % ta upp i presentationen att ni var lite låga under inspelningen?
-        % för hur mycket man borde kompensara skiljer sig nämligen för de 
-        % olika filerna!
         peaks = [t movmedian(f,10)];
         
         subplot(2,2,k) % 2x2 subplots
