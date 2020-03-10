@@ -5,7 +5,7 @@ run setup.m % adds paths, sets fs, loads data and reads midi fil
 % dont forget to set dsfactor and downsample as you like after running setup.m!
 
 %% Spectral estimation for each tone
-voice = 4;
+voice = 1;
 tones = zeros(sum(midinotes(:,1) == voice),5);
 
 d    = 3; % peaks to look for
@@ -68,7 +68,7 @@ scatter(tones(:,1),tones(:,2).*qtone,"rV")
 
 
 %%
-voice = 3;
+voice = 1;
 track = naacor(:,voice);
 
 
@@ -93,7 +93,6 @@ count = 0;
 eratio = zeros(wnum-1,1);
 for t=1:wnum-1
     x = track((t-1)*wlen+1:t*wlen);
-
     
     xacf = acf(x,floor(wlen/4));
     
@@ -101,8 +100,6 @@ for t=1:wnum-1
 %         figure
 %         stem(xacf)
 %     end
-
-    
     
     spect = fftshift(abs(fft(x,P))/wlen).^2;   % periodogram
     spect = spect(P/2+1:end);

@@ -155,7 +155,7 @@ peaks    = findpeaks(s,fs);
 %%
 voice = 1;
 track = txtcor(:,voice);
-[f, t] = swipep(track,fs,[30, 800],0.005,[],[],0.3);
+[f, t] = swipep(track,fs,[30, 800],0.001,[],[],0.3);
 %plotparts(midinotes,voice)
 %plot(t,f,".")
 peaks = [t movmedian(f,10)];

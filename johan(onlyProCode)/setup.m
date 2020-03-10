@@ -27,38 +27,44 @@ midinotes(:,5:6) = midinotes(:,5:6) + 3; % song starts at time t = 3 seconds, no
 midinotes(:,3) = midi2freq(midinotes(:,3)); % midi notes to frequencies
 qtone = exp((log(midi2freq(69))-log(midi2freq(68)))/2); % quarter tone, aka error margin
 
-midiNoTrash = midinotes(:, [1 3 5 6]);
-midinotesVoice1 = zeros(51,3);
-midinotesVoice2 = zeros(52,3);
-midinotesVoice3 = zeros(52,3);
-midinotesVoice4 = zeros(54,3);
-midinotesVoice5 = zeros(51,3);
-currentRow1 = 1;
-currentRow2 = 1;
-currentRow3 = 1;
-currentRow4 = 1;
-currentRow5 = 1;
+midinotes2 = midinotes(:,[1 3 5 6]);
+notes = cell(5,1);
 
-for i = 1:length(midiNoTrash)
-    
-    if midiNoTrash(i,1) == 1
-        midinotesVoice1(currentRow1,:) = midiNoTrash(i,2:end);
-        currentRow1 = currentRow1 + 1;
-    elseif midiNoTrash(i,1) == 2
-        midinotesVoice2(currentRow2,:) = midiNoTrash(i,2:end);
-        currentRow2 = currentRow2 + 1;
-    elseif midiNoTrash(i,1) == 3
-        midinotesVoice3(currentRow3,:) = midiNoTrash(i,2:end);
-        currentRow3 = currentRow3 + 1;
-    elseif midiNoTrash(i,1) == 4
-        midinotesVoice4(currentRow4,:) = midiNoTrash(i,2:end);
-        currentRow4 = currentRow4 + 1;
-    elseif midiNoTrash(i,1) == 5
-        midinotesVoice5(currentRow5,:) = midiNoTrash(i,2:end);
-        currentRow5 = currentRow5 + 1;
-    end
-    
+for i=1:5
+    n = midinotes2(midinotes2(:,1) == i,:);
+    notes{i} = n(:,2:end);
 end
+
+% midiNoTrash = midinotes(:, [1 3 5 6]);
+% midinotesVoice1 = zeros(51,3);
+% midinotesVoice2 = zeros(52,3);
+% midinotesVoice3 = zeros(52,3);
+% midinotesVoice4 = zeros(54,3);
+% midinotesVoice5 = zeros(51,3);
+% currentRow1 = 1;
+% currentRow2 = 1;
+% currentRow3 = 1;
+% currentRow4 = 1;
+% currentRow5 = 1;
+% 
+% for i = 1:length(midiNoTrash)
+%     if midiNoTrash(i,1) == 1
+%         midinotesVoice1(currentRow1,:) = midiNoTrash(i,2:end);
+%         currentRow1 = currentRow1 + 1;
+%     elseif midiNoTrash(i,1) == 2
+%         midinotesVoice2(currentRow2,:) = midiNoTrash(i,2:end);
+%         currentRow2 = currentRow2 + 1;
+%     elseif midiNoTrash(i,1) == 3
+%         midinotesVoice3(currentRow3,:) = midiNoTrash(i,2:end);
+%         currentRow3 = currentRow3 + 1;
+%     elseif midiNoTrash(i,1) == 4
+%         midinotesVoice4(currentRow4,:) = midiNoTrash(i,2:end);
+%         currentRow4 = currentRow4 + 1;
+%     elseif midiNoTrash(i,1) == 5
+%         midinotesVoice5(currentRow5,:) = midiNoTrash(i,2:end);
+%         currentRow5 = currentRow5 + 1;
+%     end
+% end
 
 
 
