@@ -72,6 +72,7 @@ class MyWidget(pg.GraphicsWindow):
         self.plotSoundData = self.plotSound.plot()
 
     def audio_callback(self, in_data, frame_count, time_info, status):
+        print('in callback')
         t = time.perf_counter()
         audio_data = np.frombuffer(in_data, dtype=np.int16)
         self.sound = np.roll(self.sound,-len(audio_data))

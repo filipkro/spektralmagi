@@ -23,7 +23,7 @@ swipe_peaks = zeros(wnum,1);
 a = zeros(wnum-1,1);
 eratio = zeros(wnum,1);
 
-
+%%
 close all
 plotbool = 0;
 sum_rate = 0;%1e-5;
@@ -60,12 +60,12 @@ plot(trt,swrt,'.')
 %tp = linspace(0,N*fs-1
 %%
 fs = 44100;
-[sp,tp,ss] = swipep(track, fs, [80 500], 0.005, 0.25);
+[sp,tp,ss] = swipep(track, fs, [80 500], 0.02, 0.25);
 
 medsp = movmedian(sp,100,'omitnan');
 
 %%
-%figure
+figure
 hold on
 plotparts(midinotes,voice)
 %hold on
