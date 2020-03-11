@@ -1,6 +1,9 @@
 from PyQt5 import QtCore, QtWidgets
 import pyqtgraph as pg
 import numpy as np
+import math
+import inspect
+
 
 import struct
 import pyaudio
@@ -36,6 +39,7 @@ def notesTimeMap(times,notes):
             timeNotes[curTime] = note[2]
             curTime += 1
     return timeNotes
+
 
 class MyWidget(pg.GraphicsWindow):
 
@@ -97,6 +101,11 @@ class MyWidget(pg.GraphicsWindow):
         #self.plotSwipe.setLogMode(False,True)
         #self.plotSwipe.enableAutoScale()
 
+        r2 = pg.QtGui.QGraphicsRectItem(0, -5, 3, 10)
+        r2.setPen(pg.mkPen((0, 0, 0, 100)))
+        r2.setBrush(pg.mkBrush((50, 50, 200)))
+        self.plotSwipe.addItem(r2)
+
         self.plotPitches = self.plotSwipe.plot([], pen=None,
             symbolBrush=(255,0,0), symbolSize=5, symbolPen=None)
         self.plotNotesUpper = self.plotSwipe.plot([], pen=None,
@@ -104,6 +113,7 @@ class MyWidget(pg.GraphicsWindow):
         self.plotNotesLower = self.plotSwipe.plot([], pen=None,
             symbolBrush=(0,0,255), symbolSize=2, symbolPen=None)
         self.plotSound = self.plotSound.plot()
+
 
 
     # def audio_callback(self, in_data, frame_count, time_info, status):
@@ -118,8 +128,9 @@ class MyWidget(pg.GraphicsWindow):
     def onNewData2(self):
         noteTimes = notesTimeMap(self.tp+self.simtime,notes)
         self.simtime += self.loop
-        self.plotNotesLower.setData(self.tp+5, noteTimes/1.03)
-        self.plotNotesUpper.setData(self.tp+5, noteTimes*1.03)
+        self.plotNotesLower.setData(self.tp+5, [math.log(max(1,y)) for y in noteTimes/1.03])
+        self.plotNotesUpper.setData(self.tp+5, [math.log(max(1,y)) for y in noteTimes*1.03])
+        
 
         data = np.frombuffer(self.stream.read(self.CHUNK,exception_on_overflow=False), dtype=np.int16)
         data = data.astype('float64')
@@ -131,7 +142,7 @@ class MyWidget(pg.GraphicsWindow):
         self.pitch = np.roll(self.pitch,-len(sw))
         np.put(self.pitch,range(-len(sw),-1),sw)
         
-        self.plotPitches.setData(self.tp, self.pitch)
+        self.plotPitches.setData(self.tp, [math.log(max(1,y)) for y in self.pitch])
         self.plotSound.setData(self.t, self.sound)
 
         
@@ -153,12 +164,15 @@ class MyWidget(pg.GraphicsWindow):
         self.plotSound.setData(self.t, self.sound)
 
 
+
 def main():
     app = QtWidgets.QApplication([])
 
     pg.setConfigOptions(antialias=True) # True seems to work as well
 
     win = MyWidget()
+    for method in [method_name for method_name in dir(win) if callable(getattr(win, method_name))]:
+        print(method)
     win.show()
     win.raise_()
     app.exec_()

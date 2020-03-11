@@ -2,6 +2,8 @@ from music21 import *
 from tkinter import *
 from tkinter import filedialog
 import threading
+import math
+from datetime import datetime
 
 
 #path = filedialog.askopenfilename()
@@ -30,7 +32,7 @@ for e in piece.flat.notesAndRests:
 
 midirange = midimax-midimin+1
 
-time  = 0
+cTime  = 0
 dTime = 12
 
 class Pitch():
@@ -39,7 +41,7 @@ class Pitch():
         self.freq = freq
 
 class RollCanvas(Canvas):
-    def __init__(self,midimin,midimax,dTime=10, *args, **kwargs):
+    def __init__(self,midimin,midimax,tempo,timeSig,dTime=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.midimin   = midimin
         self.midimax   = midimax
@@ -47,7 +49,9 @@ class RollCanvas(Canvas):
         self.freqmin   = self.midi2freq(midimin)/(2**(1/24))
         self.freqmax   = self.midi2freq(midimax)*(2**(1/24))
         self.freqrange = self.freqmax-self.freqmin
-        self.dTime = dTime
+        self.dTime     = dTime
+        self.tempo     = tempo/60 # bps instead of bpm
+        self.timeSig   = timeSig
 
     def w(self):
         return self.winfo_width()
@@ -56,7 +60,7 @@ class RollCanvas(Canvas):
         return self.winfo_height()
 
     def time2px(self,time, cTime):
-        return (time-cTime)/self.dTime*self.w() + self.w()
+        return (time-cTime)/self.dTime*self.w() + self.w()/2
 
     def midi2px(self,midi):
         return self.h()-(midi-self.midimin)*self.h()/self.midirange
@@ -68,20 +72,31 @@ class RollCanvas(Canvas):
         a = 440 #frequency of A (coomon value is 440Hz)
         return (a / 32) * (2 ** ((midi - 9) / 12))
 
-    def drawLines(self, nPitches):
-        w = self.winfo_width()
-        h = self.winfo_height()
-        for i in range(1,nPitches):
-            y = h/nPitches*i
-            self.create_line(0,y,w,y,fill="#555555")
-        self.create_line(w/2,0,w/2,h,fill="white")
+    def drawLines(self, cTime):
+        # Note lines
+        for i in range(1,self.midirange):
+            y = self.h()/self.midirange*i
+            self.create_line(0,y,self.w(),y,fill="#444444")
+        # Bar Lines
+        nBars = math.ceil(self.dTime*self.tempo/self.timeSig)
+        for i in range(-math.ceil(nBars/2),math.ceil(nBars/2)):
+            for j in range(self.timeSig):
+                x = (i*self.timeSig+j)*self.w()/(self.dTime*self.tempo)+self.w()/2-self.w()*(cTime%(self.timeSig/(self.tempo)))/self.dTime
+                if j%self.timeSig==0:
+                    self.create_line(x,0,x,self.h(),fill="#555555")
+                else:
+                    self.create_line(x,0,x,self.h(),fill="#444444",dash=(4,4))
+            x = i/self.dTime*self.h()+(cTime%(self.tempo*self.timeSig))*self.h()
+            
+        # Now-line
+        self.create_line(self.w()/2,0,self.w()/2,self.h(),fill="white")
 
     def drawNote(self,note,cTime):
         x0 = self.time2px(note.time,cTime)
         x1 = self.time2px(note.time+note.seconds,cTime)
         y0 = self.midi2px(note.pitch.midi)
         y1 = y0 - self.h()/self.midirange
-        if note.time < time:
+        if note.time < cTime:
             color = "red"
         else:
             color = "grey"
@@ -115,26 +130,27 @@ notesCanvas.grid(row=0,column=1)
 rollReference = Canvas(rollFrame, width=wRef,height=hRoll,bg="black")
 rollReference.grid(row=0,column=0)
 
-rollCanvas = RollCanvas(midimin,midimax,10,rollFrame, width=wCan,height=hRoll,bg="black")
+rollCanvas = RollCanvas(midimin,midimax,90,3,10,rollFrame, width=wCan,height=hRoll,bg="black")
 rollCanvas.grid(row=0,column=1)
 
 master.update()
 
-rollCanvas.drawLines(midirange)
 
 def drawUpcoming():
     for e in upcoming:
         if e.isNote:
-            rollCanvas.drawNote(e,time)
+            rollCanvas.drawNote(e,cTime)
 
 looplen = 50; # length of loop in milliseconds
 
 def loop():
-    global time
-    time += looplen/1000
+    global cTime
+    millis1 = datetime.now().microsecond
+    cTime += looplen/1000
     rollCanvas.delete("all")
-    rollCanvas.drawLines(midirange)
+    rollCanvas.drawLines(cTime)
     drawUpcoming()
+    millis2 = datetime.now().microsecond
     master.after(looplen,loop)
 
 master.after(looplen,loop)
