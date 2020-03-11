@@ -25,14 +25,14 @@ class MyWidget(pg.GraphicsWindow):
         self.setup_plot(loop)
 
 
-
-
     def setup_pyaudio(self,loop):
         FORMAT = pyaudio.paInt16
+
         CHANNELS = 1
         self.RATE = 44100
         # self.CHUNK = int(loop*self.RATE)
         self.CHUNK = self.nbr_chunks*2048
+
 
         p = pyaudio.PyAudio()
         self.stream = p.open(

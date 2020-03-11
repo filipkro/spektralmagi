@@ -57,9 +57,9 @@ class MyWidget(pg.GraphicsWindow):
 
         # print(self.plotSwipe.getViewBox())
 
-        self.plotDataItem = self.plotSwipe.plot([], pen=None,
+        self.plotPitches = self.plotSwipe.plot([], pen=None,
             symbolBrush=(255,0,0), symbolSize=5, symbolPen=None)
-        self.plotSoundData = self.plotSound.plot()
+        self.plotSound = self.plotSound.plot()
 
         self.t0 = time.process_time()
         self.tcallb = time.process_time()
@@ -115,10 +115,10 @@ class MyWidget(pg.GraphicsWindow):
         # np.put(self.pitch,range(-len(sw),-1),sw)
 
         # t3 = time.process_time()
-        self.plotDataItem.setData(self.tp, self.pitch)
+        self.plotPitches.setData(self.tp, self.pitch)
         # t4 = time.process_time()
         # print('plot pitch: ', t4-t3)
-        self.plotSoundData.setData(self.t, self.sound)
+        self.plotSound.setData(self.t, self.sound)
         # print('plot sound: ',time.process_time()-t4)
 
 

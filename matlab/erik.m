@@ -162,7 +162,7 @@ legend(algs)
 peaks    = findpeaks(s,fs);
 
 %%
-voice = 1;
+voice = 3;
 track = txtcor(:,voice);
 [f, t] = swipep(track,fs,[30, 800],0.005,[],[],0.3);
 %plotparts(midinotes,voice)
