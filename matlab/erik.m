@@ -1,18 +1,9 @@
 
 
-run setup.m % adds paths, sets fs, loads data and reads midi file
+run setup.m % adds paths, sets fs, loads data and reads midi file and store
+% every voice in cell object
 
 % dont forget to set dsfactor and downsample as you like after running setup.m!
-
-%%
-
-midinotes2 = midinotes(:,[1 3 5 6]);
-notes = cell(5,1);
-
-for i=1:5
-    n = midinotes2(midinotes2(:,1) == i,:);
-    notes{i} = n(:,2:end);
-end
 
 %%
 voice = 1;
@@ -30,12 +21,12 @@ peaks = zeros(wnum,1);
 %%
 for t=1:wnum-1
     x = track((t-1)*wlen+1:t*wlen);
-    autocor = acf(x, wlen);                        % Is it a consonant?
+    autocor = acf(x, wlen);                        % Is it a consonant? No!
     if max(autocor(floor(fs/maxfreq+1):end)) > 0.4 && var(x) > 1e-7
         spect = fftshift(abs(fft(x,P))/wlen).^2;   % periodogram
         spect = spect(P/2+1:end);
         per = combFilter(spect,1,[],4, -0.01);
-        [freq, amp] = findpeaks(per,1);
+        [freq, ~] = findpeaks(per,1);
         peaks(t,1) = ff(freq(1));
     end
 end

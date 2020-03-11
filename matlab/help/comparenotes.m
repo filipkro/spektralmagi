@@ -11,7 +11,6 @@ notes = [notes, zeros(size(notes,1),1)];
 i = 1;
 
 if ploton
-   figure
    hold on
 end
 
