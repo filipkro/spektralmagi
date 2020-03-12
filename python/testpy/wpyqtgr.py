@@ -42,7 +42,7 @@ class AudioStream(object):
             title='Sound', row=1, col=1, axisItems={'bottom': wf_xaxis, 'left': wf_yaxis},
         )
         self.spectrum = self.win.addPlot(
-            title='Swipe', pen='None', symbol='o', row=2, col=1, axisItems={'bottom': sp_xaxis},
+            title='Swipe', pen=None, symbol='o', row=2, col=1, axisItems={'bottom': sp_xaxis},
         )
         # self.scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
         # self.spectrum = self.win.addItem(self.scatter)
@@ -58,7 +58,11 @@ class AudioStream(object):
         self.waveform.setYRange(-7000, 7000, padding=0)
         self.waveform.setXRange(-10, 0, padding=0.005)
 
-        self.traces['swipe'] = self.spectrum.plot(pen='m', width=3)
+        symb = QtGui.QPainterPath()
+        symb.addRect(QtCore.QRectF(-0.0, -0.5, 1, 1))
+        # self.traces['swipe'] = self.spectrum.plot([], pen=None,
+        #     symbolBrush=(255,0,0), symbolSize=5, symbolPen=None)
+        self.traces['swipe'] = self.spectrum.ScatterPlotItem()
         self.spectrum.setYRange(0, 700, padding=0)
         self.spectrum.setXRange(-10, 0, padding=0.005)
 
