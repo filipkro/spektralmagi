@@ -45,25 +45,33 @@ class MyWidget(pg.GraphicsWindow):
         self.proc.start()
 
     def do_job(self):
-        print('in do_job')
+        #print('in do_job')
         while True:
             try:
                 self.shut_down_queue.get_nowait()
             except:
                 try:
+                    
                     data = self.unprocessed_sound.get_nowait()
                 except queue.Empty:
-                    print('queue empty')
+                    #print('queue empty')
                     time.sleep(0.04)
                 else:
+                    print(self.unprocessed_sound.empty())
                     # self.cnt = 0
-                    print('Data length: ', len(data))
+                    #print('Data length: ', len(data))
                     data = data.astype('float64')
+                    #print(len(data))
                     t0 = time.perf_counter()
+<<<<<<< HEAD
                     sw = swipe(data,self.RATE,int(self.CHUNK/5),min=30,max=1200,threshold=0.25)
                     print('swipe time: ', time.perf_counter()-t0)
+=======
+                    sw = swipe(data,self.RATE,int(self.CHUNK/5),min=30,max=800,threshold=0.25)
+                    #print('swipe time: ', time.perf_counter()-t0)
+>>>>>>> 969b7fed13e96984f52742a8860c6f4a25758444
                     self.swipes_toplot.put(sw)
-                    print('swipe length: ', len(sw))
+                    #print('swipe length: ', len(sw))
             else:
                 break
         return True
@@ -73,7 +81,7 @@ class MyWidget(pg.GraphicsWindow):
         self.setLayout(self.mainLayout)
 
         self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(50) # in milliseconds
+        self.timer.setInterval(20) # in milliseconds
         self.timer.start()
         self.timer.timeout.connect(self.update_plot)
 
@@ -91,14 +99,17 @@ class MyWidget(pg.GraphicsWindow):
         # self.plot_swipe_item.setLogMode(x=None,y=True)
 
     def audio_callback(self, in_data, frame_count, time_info, status):
-        print('in callback')
+        
+        #print(time.time())
+        #print('in callback')
         data = np.frombuffer(in_data,dtype=np.int16)
+        #print(type(data.astype('float64')))
         self.unprocessed_sound.put(data)
 
         return(in_data,pyaudio.paContinue)
 
     def myExitHandler(self):
-        print('in exit')
+        #print('in exit')
         self.p.close(self.stream)
         self.shut_down_queue.put(True)
         self.proc.join()
@@ -108,13 +119,14 @@ class MyWidget(pg.GraphicsWindow):
         try:
             data = self.swipes_toplot.get_nowait()
         except queue.Empty:
-            print('no swipes')
+            pass
+            #print('no swipes')
         else:
             self.pitch = np.roll(self.pitch,-len(data))
             np.put(self.pitch,range(-len(data),-1),data)
             t0 = time.perf_counter()
             self.plot_swipe_item.setData(self.tp,np.log10(self.pitch))
-            print('plot time: ', time.perf_counter()-t0)
+            #print('plot time: ', time.perf_counter()-t0)
 
 
 

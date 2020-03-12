@@ -141,7 +141,7 @@ def drawUpcoming():
         if e.isNote:
             rollCanvas.drawNote(e,cTime)
 
-looplen = 50; # length of loop in milliseconds
+looplen = 20; # length of loop in milliseconds
 
 def loop():
     global cTime
