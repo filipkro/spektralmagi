@@ -2,8 +2,7 @@
 
 run setup.m
 %% 
-% NOTE: TAKES MINUTES TO RUN THIS SCRIPT
-tic
+% NOTE: TAKES ABOUT 5 MINUTES TO RUN THIS SCRIPT
 
 superTitle = cell(5,1);
 superTitle{1} = 'Counter tenor';
@@ -37,9 +36,7 @@ for voice = 1:5 % for every voice
         title(fileName(k,:));
         ylabel('Frequency (Hz)')
         xlabel('Time (s)')
-        axis([0 70 120 600])
+        axis([0 70 120 600]) % 0-70 xaxis and 120-600 yaxis
 
     end
 end
-
-toc 
