@@ -37,7 +37,7 @@ class MyWidget(pg.GraphicsWindow):
             channels=CHANNELS,
             rate=self.RATE,
             input=True,
-            output=True,
+            output=False,
             stream_callback=self.audio_callback,
             frames_per_buffer=self.CHUNK
         )
@@ -60,7 +60,7 @@ class MyWidget(pg.GraphicsWindow):
                     print('Data length: ', len(data))
                     data = data.astype('float64')
                     t0 = time.perf_counter()
-                    sw = swipe(data,self.RATE,int(self.CHUNK/5),min=30,max=800,threshold=0.25)
+                    sw = swipe(data,self.RATE,int(self.CHUNK/5),min=30,max=1200,threshold=0.25)
                     print('swipe time: ', time.perf_counter()-t0)
                     self.swipes_toplot.put(sw)
                     print('swipe length: ', len(sw))
@@ -80,7 +80,7 @@ class MyWidget(pg.GraphicsWindow):
         self.plotSwipe = self.addPlot(title="Swipe pitch estimates")
         # self.plotSwipe.setLogMode(x=False,y=True)
         # self.plotSwipe.setXRange(-10, 0, padding=0)
-        self.plotSwipe.setYRange(1, 3, padding=0)
+        self.plotSwipe.setYRange(1, 3.3, padding=0)
         # self.plotSwipe.enableAutoScale()
 
         self.plot_swipe_item = self.plotSwipe.plot([], pen=None,
