@@ -92,7 +92,6 @@ class RTSwipe:
 
     def getSwipes(self):
         if not self.swipes.empty():
-            print('swipe')
             swipes = self.swipes.get_nowait()
             times  = self.times.get_nowait()
             newSwipes = []
@@ -102,8 +101,6 @@ class RTSwipe:
                     newSwipes.append(np.log(swipes[i])/np.log(2**(1/12)))
                     newTimes.append(times[i])
             return newSwipes, newTimes
-        else:
-            print('empty swipe')
         return [], []
 
     def exitHandler(self):
@@ -167,7 +164,6 @@ class RollWindow(pg.GraphicsWindow):
             self.ticks = np.roll(self.ticks,-1)
             np.put(self.ticks,-1,max(self.ticks)+0.75)
             dx = [(val, str(int(val/0.75))) for val in self.ticks]
-            print(dx)
             self.ax.setTicks([dx,[]])
 
         newSwipes, newTimes = self.sweeper.getSwipes()
