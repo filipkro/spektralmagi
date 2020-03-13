@@ -187,9 +187,8 @@ class RollWindow(pg.GraphicsWindow):
             if i%12==0:
                 majorTicks.append((i-1/2, p.nameWithOctave))
             minorTicks.append((i-1/2, p.nameWithOctave))
+        self.yAxisSwipe.setTicks([majorTicks,minorTicks])
         self.plotSwipe.showGrid(x=True, y=True, alpha=0.5)
-        self.yAxisSwipe.setGrid(0)
-        self.rightAxisSwipe.setGrid(255)
         self.yAxisSwipe.setTickSpacing(levels=[(12,-0.5), (1,-0.5)])
 
         
