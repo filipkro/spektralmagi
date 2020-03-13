@@ -92,6 +92,7 @@ class RTSwipe:
 
     def getSwipes(self):
         if not self.swipes.empty():
+            print('swipe')
             swipes = self.swipes.get_nowait()
             times  = self.times.get_nowait()
             newSwipes = []
@@ -101,6 +102,8 @@ class RTSwipe:
                     newSwipes.append(np.log(swipes[i])/np.log(2**(1/12)))
                     newTimes.append(times[i])
             return newSwipes, newTimes
+        else:
+            print('empty swipe')
         return [], []
 
     def exitHandler(self):
@@ -131,27 +134,46 @@ class RollWindow(pg.GraphicsWindow):
         self.plotSwipe = self.addPlot(title="Swipe pitch estimates")
         # self.plotSwipe.setLogMode(x=False,y=True)
 
-        self.plotSwipe.setYRange(np.log(50)/np.log(2**(1/12)), np.log(1500)/np.log(2**(1/12)), padding=0)
+        min_freq = np.log(80)/np.log(2**(1/12))
+        max_freq = np.log(800)/np.log(2**(1/12))
+
+        self.plotSwipe.setYRange(min_freq, max_freq, padding=0)
 
         self.plot_swipe_item = self.plotSwipe.plot([], pen=None,
             symbolBrush=(255,0,0), symbolSize=5, symbolPen=None)
-        # self.plot_swipe_item.setLogMode(False,True)
-        # self.plot_swipe_item.setXRange(-10, 0, padding=0)
-        # self.plot_swipe_item.setYRange(1, 3, padding=0)
-        # self.plot_swipe_item.setLogMode(x=None,y=True)
 
         r2 = pg.QtGui.QGraphicsRectItem(5, 1, 6, 3.2)
         r2.setPen(pg.mkPen((0, 0, 0, 100)))
         r2.setBrush(pg.mkBrush((50, 50, 200)))
+        self.plotSwipe.showGrid(True,True)
+
+
+
+        ay = self.plotSwipe.getAxis('left')
+        dy = [(value+0.5, str(value+0.5)) for value in range(int(min_freq),int(max_freq))]
+        ay.setTicks([dy, []])
+        self.ax = self.plotSwipe.getAxis('bottom')
+
         self.plotSwipe.addItem(r2)
+        self.ticks = np.arange(self.t-self.timeWindow/2,
+                                 self.t+self.timeWindow/2,0.75)
+
 
     def update(self):
         self.plotSwipe.setXRange(self.t-self.timeWindow/2,
                                  self.t+self.timeWindow/2, padding=0)
+
+        if self.t+self.timeWindow/2 > max(self.ticks):
+            self.ticks = np.roll(self.ticks,-1)
+            np.put(self.ticks,-1,max(self.ticks)+0.75)
+            dx = [(val, str(int(val/0.75))) for val in self.ticks]
+            print(dx)
+            self.ax.setTicks([dx,[]])
+
         newSwipes, newTimes = self.sweeper.getSwipes()
         self.swipes += newSwipes
         self.times  += newTimes
-        #print(len(self.swipes))
+
 
         if len(self.swipes) > 0:
             self.plot_swipe_item.setData(self.times,self.swipes)
@@ -173,7 +195,7 @@ def main():
     pg.setConfigOptions(antialias=False) # True seems to work as well
 
     sweeper    = RTSwipe()
-    rollWindow = RollWindow(sweeper)
+    rollWindow = RollWindow(sweeper,updateInterval=40)
     app.aboutToQuit.connect(sweeper.exitHandler)
     rollWindow.show()
     rollWindow.raise_()

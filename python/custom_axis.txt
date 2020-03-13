@@ -1,0 +1,2 @@
+https://stackoverflow.com/questions/41078849/pyqtgraph-how-to-set-intervals-of-axis
+

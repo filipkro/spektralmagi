@@ -51,7 +51,7 @@ class MyWidget(pg.GraphicsWindow):
                 self.shut_down_queue.get_nowait()
             except:
                 try:
-                    
+
                     data = self.unprocessed_sound.get_nowait()
                 except queue.Empty:
                     #print('queue empty')
@@ -63,13 +63,8 @@ class MyWidget(pg.GraphicsWindow):
                     data = data.astype('float64')
                     #print(len(data))
                     t0 = time.perf_counter()
-<<<<<<< HEAD
                     sw = swipe(data,self.RATE,int(self.CHUNK/5),min=30,max=1200,threshold=0.25)
                     print('swipe time: ', time.perf_counter()-t0)
-=======
-                    sw = swipe(data,self.RATE,int(self.CHUNK/5),min=30,max=800,threshold=0.25)
-                    #print('swipe time: ', time.perf_counter()-t0)
->>>>>>> 969b7fed13e96984f52742a8860c6f4a25758444
                     self.swipes_toplot.put(sw)
                     #print('swipe length: ', len(sw))
             else:
@@ -88,7 +83,24 @@ class MyWidget(pg.GraphicsWindow):
         self.plotSwipe = self.addPlot(title="Swipe pitch estimates")
         # self.plotSwipe.setLogMode(x=False,y=True)
         # self.plotSwipe.setXRange(-10, 0, padding=0)
-        self.plotSwipe.setYRange(1, 3.3, padding=0)
+        min_freq = np.log(80)/np.log(2**(1/12))
+        max_freq = np.log(800)/np.log(2**(1/12))
+        # min_freq = 80
+        # max_freq = 500
+        self.plotSwipe.setYRange(min_freq,max_freq, padding=0)
+        self.plotSwipe.showGrid(True,True,1)
+
+        # to fix grid, the same for x axis
+        ay = self.plotSwipe.getAxis('left')
+        # np.exp(np.log(2**(1/12)*(value+0.5)))
+        dy = [(value+0.5, str(value+0.5)) for value in range(int(min_freq),int(max_freq))]
+        ay.setTicks([dy, []])
+
+        ax = self.plotSwipe.getAxis('bottom')
+        dx = [(value, str(value)) for value in np.arange(-10,0,0.75)]
+        ax.setTicks([dx, []])
+        # time_
+
         # self.plotSwipe.enableAutoScale()
 
         self.plot_swipe_item = self.plotSwipe.plot([], pen=None,
@@ -99,7 +111,7 @@ class MyWidget(pg.GraphicsWindow):
         # self.plot_swipe_item.setLogMode(x=None,y=True)
 
     def audio_callback(self, in_data, frame_count, time_info, status):
-        
+
         #print(time.time())
         #print('in callback')
         data = np.frombuffer(in_data,dtype=np.int16)
@@ -125,7 +137,7 @@ class MyWidget(pg.GraphicsWindow):
             self.pitch = np.roll(self.pitch,-len(data))
             np.put(self.pitch,range(-len(data),-1),data)
             t0 = time.perf_counter()
-            self.plot_swipe_item.setData(self.tp,np.log10(self.pitch))
+            self.plot_swipe_item.setData(self.tp,np.log(self.pitch)/np.log(2**(1/12)))
             #print('plot time: ', time.perf_counter()-t0)
 
 
