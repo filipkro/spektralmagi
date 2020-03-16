@@ -1,5 +1,5 @@
 # plotting
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 from music21 import *
 
@@ -23,16 +23,15 @@ class RTSwipe:
         self.maxfreq=maxfreq
         self.threshold=threshold
 
-        CHANNELS = 1
+        # CHANNELS = 1
         self.RATE  = RATE
         self.CHUNK = CHUNK#2*2048
         self.swipesPerChunk = math.floor(CHUNK/(RATE*0.02)) # 20 ms per swipe estimate
-        FORMAT   = pyaudio.paInt16
+        # FORMAT   = pyaudio.paInt16
         self.cnt = 0
-        tsave    = 10
 
-        self.t0 = time.time()
-        self.t  = self.t0
+        # self.t0 = time.time()
+        # self.t  = self.t0
 
         self.sound    = mp.Queue()
         self.times    = mp.Queue()
@@ -40,6 +39,12 @@ class RTSwipe:
         self.shutDown = mp.Queue()
 
         self.audio= pyaudio.PyAudio()
+
+    def start_swipe(self,t):
+        CHANNELS = 1
+        FORMAT   = pyaudio.paInt16
+        self.t0 = t
+        self.t  = self.t0
         self.stream = self.audio.open(
             format=FORMAT,
             channels=CHANNELS,
@@ -53,6 +58,7 @@ class RTSwipe:
         self.process.start()
 
         print("Process started")
+
 
     def audioCallback(self, in_data, frame_count, time_info, status):
         #print('in callback')
@@ -136,9 +142,9 @@ class NotesWizard:
 
             t += e.seconds
 
-        self.notes_iter = self.piece.flat.notes
-        self.current_note = next(self.notes_iter)
-        self.finished = False
+        # self.notes_iter = self.piece.flat.notes
+        # self.current_note = next(self.notes_iter)
+        # self.finished = False
 
 
     def getNotesAndRests(self):
@@ -183,7 +189,7 @@ class RollWindow(pg.GraphicsWindow):
         self.sweeper = sweeper
         self.updateInterval = updateInterval
         self.timeWindow = timeWindow
-        self.t0 = time.time()
+        # self.t0 = time.time()
         self.t  = 0
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.setLayout(self.mainLayout)
@@ -193,7 +199,7 @@ class RollWindow(pg.GraphicsWindow):
 
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(updateInterval) # in milliseconds
-        self.timer.start()
+        # self.timer.start()
         self.timer.timeout.connect(self.update)
 
         timeSig = notesWizard.getTimeSig()
@@ -242,6 +248,21 @@ class RollWindow(pg.GraphicsWindow):
         self.notes_done = False
         self.score = 0
         self.total_swipes = 0
+
+
+        self.start_button = QtGui.QPushButton("Start")
+        self.start_button.clicked.connect(self.start_pressed)
+        self.mainLayout.addWidget(self.start_button)
+
+
+
+    def start_pressed(self):
+        self.t0 = time.time()
+        self.sweeper.start_swipe(self.t0)
+        self.timer.start()
+
+
+
 
 
     def update_score(self):
@@ -307,7 +328,7 @@ def main():
 
     sweeper    = RTSwipe()
     wizard     = NotesWizard("Vem_kan_segla.musicxml")
-    rollWindow = RollWindow(sweeper, wizard,updateInterval=70)
+    rollWindow = RollWindow(sweeper,wizard,updateInterval=70)
     app.aboutToQuit.connect(sweeper.exitHandler)
     rollWindow.show()
     rollWindow.raise_()
