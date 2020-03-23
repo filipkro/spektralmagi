@@ -191,11 +191,27 @@ class RollWindow(pg.GraphicsWindow):
         btn_layout = QtWidgets.QHBoxLayout()
         proxy = QtGui.QGraphicsProxyWidget()
         start_button = QtGui.QPushButton("Start")
+        re_button = QtGui.QPushButton("Restart")
+        quit_button = QtGui.QPushButton("Quit")
         start_button.clicked.connect(self.start_pressed)
+        # self.score_brd = pg.TextItem()
+        # self.score_brd = QtWidgets.QGraphicsTextItem()
+        self.score_brd = QtWidgets.QLabel()
+        self.score_brd.setAlignment(QtCore.Qt.AlignCenter)
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setPointSize(25)
+        self.score_brd.setFont(font)
+
         btn_layout.addWidget(start_button)
-        proxy.setWidget(start_button)
-        p1 = self.addLayout(row=0,col=0)
-        p1.addItem(proxy)
+        btn_layout.addWidget(re_button)
+        btn_layout.addWidget(quit_button)
+        btn_layout.addWidget(self.score_brd)
+        # proxy.addItem(self.score_brd)
+        # btn_layout.addWidget(proxy)
+        # proxy.setWidget(start_button)
+        # p1 = self.addLayout(row=0,col=0)
+        # p1.addItem(proxy)
 
         # print(dict(self.getItem(0,0)))
         # self.getItem(0,0).addWidget(self.start_button)
@@ -207,6 +223,8 @@ class RollWindow(pg.GraphicsWindow):
         #
         # self.plot_box = self.addViewBox(row=1,col=0)
         # print(dir(self.btn_box))
+
+
 
 
         self.swipes = []
@@ -221,7 +239,8 @@ class RollWindow(pg.GraphicsWindow):
         tempo   = notesWizard.getTempo()
 
 
-        self.plotSwipe = self.addPlot(row=1,col=0,title="Swipe pitch estimates")
+        # self.plotSwipe = self.addPlot(row=1,col=0,title="Swipe pitch estimates")
+        self.plotSwipe = pg.PlotWidget(title="Swipe pitch estimates")
         self.plotSwipe.setYRange(36, 83, padding=0)
         self.plotSwipe.setXRange(-timeWindow/2, timeWindow/2, padding=0)
 
@@ -262,6 +281,12 @@ class RollWindow(pg.GraphicsWindow):
         self.total_swipes = 0
 
 
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addItem(btn_layout)
+        vbox.addWidget(self.plotSwipe)
+        self.setLayout(vbox)
+
+
 
         # hbox = QHBoxLayout(self.start_button)
         # hbox.addWidget()
@@ -288,6 +313,8 @@ class RollWindow(pg.GraphicsWindow):
                                     self.sweeper.RATE/self.sweeper.CHUNK)
             self.score          =   ((prev_hits+self.current_note.nbr_hits)
                                     /self.total_swipes)
+        score_str = 'Score: ' + str(round(self.score,2))
+        self.score_brd.setText(score_str)
 
         # swipes = (self.current_note.seconds*self.sweeper.swipesPerChunk*
         #                             self.sweeper.RATE/self.sweeper.CHUNK)
