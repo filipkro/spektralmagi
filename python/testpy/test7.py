@@ -38,9 +38,12 @@ class RTSwipe:
         self.swipes   = mp.Queue()
         self.shutDown = mp.Queue()
 
-        self.audio= pyaudio.PyAudio()
+        self.running = False
+
+
 
     def start_swipe(self,t):
+        self.audio= pyaudio.PyAudio()
         CHANNELS = 1
         FORMAT   = pyaudio.paInt16
         self.t0 = t
@@ -56,6 +59,7 @@ class RTSwipe:
         )
         self.process = mp.Process(target=self.swipeSound)
         self.process.start()
+        self.running = True
 
         print("Process started")
 
@@ -119,6 +123,7 @@ class NotesWizard:
         self.tempo   = (self.piece.flat.
                         getElementsByClass(tempo.MetronomeMark)[0].number)
 
+
         midimax = 0
         midimin = 9999
         t = 0
@@ -159,34 +164,11 @@ class RollWindow(pg.GraphicsWindow):
         self.sweeper = sweeper
         self.updateInterval = updateInterval
         self.timeWindow = timeWindow
-        # self.t0 = time.time()
         self.t  = 0
 
-        # self.setLayout(self.mainLayout)
-        # self.btn_box = self.addLayout()
-        # self.btn_box.setLayout(self.mainLayout)
-        # btn_box.addWidget(self.start_button)
-        # box = super().addVeiwBox()
-        # self.addWidget(self.start_button)
-
-        # print(dir(self))
-
-        # print(super())
-        # self.layout.setRowStretchFactor(0, 0)
-        # self.layout.setRowStretchFactor(1, 13)
         lay = self.ci.layout
         lay.setRowStretchFactor(0, 1)
         lay.setRowStretchFactor(1, 10)
-
-        # self.addViewBox(row=0,col=0)
-        # btn_layout = QtWidgets.QVBoxLayout()
-        #
-        # self.start_button = QtGui.QPushButton("Start")
-        # self.start_button.move(0,-100)
-        #
-        # self.start_button.clicked.connect(self.start_pressed)
-        # btn_layout.addWidget(self.start_button)
-        # self.setLayout(btn_layout)
 
         btn_layout = QtWidgets.QHBoxLayout()
         proxy = QtGui.QGraphicsProxyWidget()
@@ -194,38 +176,21 @@ class RollWindow(pg.GraphicsWindow):
         re_button = QtGui.QPushButton("Restart")
         quit_button = QtGui.QPushButton("Quit")
         start_button.clicked.connect(self.start_pressed)
-        # self.score_brd = pg.TextItem()
-        # self.score_brd = QtWidgets.QGraphicsTextItem()
+        re_button.clicked.connect(self.restart_pressed)
+        quit_button.clicked.connect(self.quit_pressed)
+
         self.score_brd = QtWidgets.QLabel()
         self.score_brd.setAlignment(QtCore.Qt.AlignCenter)
         font = QtGui.QFont()
         font.setBold(True)
         font.setPointSize(25)
         self.score_brd.setFont(font)
+        self.score_brd.setText('Score: 0.00')
 
         btn_layout.addWidget(start_button)
-        btn_layout.addWidget(re_button)
-        btn_layout.addWidget(quit_button)
+        # btn_layout.addWidget(re_button)
+        # btn_layout.addWidget(quit_button)
         btn_layout.addWidget(self.score_brd)
-        # proxy.addItem(self.score_brd)
-        # btn_layout.addWidget(proxy)
-        # proxy.setWidget(start_button)
-        # p1 = self.addLayout(row=0,col=0)
-        # p1.addItem(proxy)
-
-        # print(dict(self.getItem(0,0)))
-        # self.getItem(0,0).addWidget(self.start_button)
-
-
-        # self.layout.setMaximumHeight(10)
-        # print(dict(self.layout))
-        # self.layoutRowStretch = [0, 13, 8]
-        #
-        # self.plot_box = self.addViewBox(row=1,col=0)
-        # print(dir(self.btn_box))
-
-
-
 
         self.swipes = []
         self.times  = []
@@ -288,15 +253,24 @@ class RollWindow(pg.GraphicsWindow):
 
 
 
-        # hbox = QHBoxLayout(self.start_button)
-        # hbox.addWidget()
-
-        # self.mainLayout.addWidget(self.start_button)
 
 
+    def quit_pressed(self):
+        return True
 
+    def restart_pressed(self):
+        return True
 
     def start_pressed(self):
+        self.cd = 4
+        self.cd_timer = QtCore.QTimer(self)
+        self.cd_timer.setInterval(60/self.notesWizard.tempo*1000) # in milliseconds
+        self.cd_timer.timeout.connect(self.count_down)
+        self.t0 = time.perf_counter()
+        self.cd_timer.start()
+
+    def start_app(self):
+        self.score_brd.setText("Score: 0.00")
         self.t0 = time.time()
         if not self.timer.isActive():
             print('start')
@@ -304,6 +278,15 @@ class RollWindow(pg.GraphicsWindow):
             self.timer.start()
         else:
             self.sweeper.set_time(self.t0)
+
+    def count_down(self):
+        print(time.perf_counter() - self.t0)
+        self.t0 = time.perf_counter()
+        self.cd += -1
+        self.score_brd.setText(str(self.cd))
+        if self.cd == 0:
+            self.cd_timer.stop()
+            self.start_app()
 
     def update_score(self):
         if self.current_note.isNote:
@@ -314,6 +297,9 @@ class RollWindow(pg.GraphicsWindow):
             self.score          =   ((prev_hits+self.current_note.nbr_hits)
                                     /self.total_swipes)
         score_str = 'Score: ' + str(round(self.score,2))
+        self.score_brd.setStyleSheet('QLabel { color:rgb('+
+                                    str(int(255*(1-self.score)))+','+
+                                    str(int(255*self.score))+',0);}')
         self.score_brd.setText(score_str)
 
         # swipes = (self.current_note.seconds*self.sweeper.swipesPerChunk*
