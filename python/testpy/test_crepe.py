@@ -3,14 +3,14 @@ import sys
 import time
 import multiprocessing as mp
 import queue
-from music21 import *
 
 import math
 import numpy as np
 
-# import music21
+from music21 import *
 import pyaudio
 from pysptk.sptk import swipe
+import crepe
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
@@ -94,6 +94,12 @@ class RTSwipe:
                            min=self.minfreq, max=self.maxfreq,
                            threshold=self.threshold)
                 self.swipes.put(sw)
+                tt, frequency, confidence, activation = crepe.predict(
+                    data, self.RATE, model_capacity='full')
+                # self.swipes.put(frequency)
+                print('FREQUENCY: ', frequency)
+                print('TIME', tt)
+
         return True
 
     def getSwipes(self):
@@ -348,7 +354,7 @@ def main():
 
     sweeper = RTSwipe()
     wizard = NotesWizard("Vem_kan_segla.musicxml")
-    rollWindow = RollWindow(sweeper, wizard, updateInterval=70)
+    rollWindow = RollWindow(sweeper, wizard, updateInterval=20)
     app.aboutToQuit.connect(sweeper.exitHandler)
     rollWindow.show()
     rollWindow.raise_()

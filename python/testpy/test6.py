@@ -317,6 +317,7 @@ class RollWindow(pg.GraphicsWindow):
                 self.current_note.rect.setBrush(pg.mkBrush((255*(1-ratio),
                                                                 255*ratio,0)))
 
+
     def update(self):
         newSwipes, newTimes = self.sweeper.getSwipes()
         if len(newSwipes) > 0 and not self.notes_done:
