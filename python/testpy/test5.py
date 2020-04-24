@@ -17,8 +17,6 @@ import math
 global BASE
 BASE = np.log(2**(1/12))
 
-
-
 class RTSwipe:
     def __init__(self,RATE=48000,CHUNK=6000,minfreq=50,maxfreq=1500,threshold=0.25):
         self.minfreq=minfreq
@@ -82,7 +80,7 @@ class RTSwipe:
                 #print('Data length: ', len(data))
                 data = data.astype('float64')
                 #print(len(data))
-                t0 = time.perf_counter()
+                # t0 = time.perf_counter()
                 sw = swipe(data, self.RATE, int(self.CHUNK/self.swipesPerChunk),
                             min=self.minfreq, max=self.maxfreq,
                             threshold=self.threshold)
@@ -125,14 +123,23 @@ class NotesWizard:
             setattr(e,"time",t)
             setattr(e,"globBeat",e.measureNumber+e.beat-2)
             if e.isNote:
-                #print(e.pitch.midi)
+                # print(e.pitch.midi)
                 midimax = max(midimax,e.pitch.midi)
                 midimin = min(midimin,e.pitch.midi)
                 rect = pg.QtGui.QGraphicsRectItem(t, e.pitch.midi-1/2, e.seconds, 2**(1/12))
                 rect.setPen(pg.mkPen((0, 0, 0, 100)))
                 rect.setBrush(pg.mkBrush((127, 127, 127)))
                 setattr(e,"rect",rect)
+                setattr(e,'nbr_hits', 0)
+                setattr(e,'nbr_tries',0)
+                setattr(e,'ratio',0.5)
+
             t += e.seconds
+
+        self.notes_iter = self.piece.flat.notes
+        self.current_note = next(self.notes_iter)
+        self.finished = False
+
 
     def getNotesAndRests(self):
         return self.piece.flat.notesAndRests
@@ -142,6 +149,31 @@ class NotesWizard:
 
     def getTempo(self):
         return self.tempo
+
+    def set_current(self, time):
+        # print('in set', time)
+        # print('cond in set', self.current_note.time + self.current_note.seconds)
+        if time >= (self.current_note.time + self.current_note.seconds) and not self.finished:
+            try:
+                self.current_note = next(self.notes_iter)
+            except StopIteration:
+                self.finished = True
+
+
+    def assess_pitch(self, pitches, times):
+        # print('assesspitch', times)
+        for (p,t) in zip(pitches,times):
+            # print('in for', t)
+            self.set_current(t)
+            if t >= self.current_note.time:
+                self.current_note.nbr_tries += 1
+                if p >= self.current_note.pitch.midi-2 and p <= self.current_note.pitch.midi+2: #ändra till +- 1/2 när någon som kan ta toner ska testa...
+                    self.current_note.nbr_hits += 1
+                self.current_note.ratio = self.current_note.nbr_hits/self.current_note.nbr_tries
+                self.current_note.rect.setBrush(pg.mkBrush((255*(1-self.current_note.ratio),255*self.current_note.ratio,0)))
+                # print(self.current_note.ratio)
+
+
 
 
 class RollWindow(pg.GraphicsWindow):
@@ -167,6 +199,7 @@ class RollWindow(pg.GraphicsWindow):
         timeSig = notesWizard.getTimeSig()
         tempo   = notesWizard.getTempo()
 
+
         self.plotSwipe = self.addPlot(title="Swipe pitch estimates")
         self.plotSwipe.setYRange(36, 83, padding=0)
         self.plotSwipe.setXRange(-timeWindow/2, timeWindow/2, padding=0)
@@ -176,6 +209,7 @@ class RollWindow(pg.GraphicsWindow):
         self.yAxisSwipe = self.plotSwipe.getAxis("left")
         self.rightAxisSwipe = self.plotSwipe.getAxis("right")
         self.rightAxisSwipe.setTickSpacing(levels=[(12,-0.5), (1,-0.5)])
+
 
         majorTicks = []
         minorTicks = []
@@ -189,6 +223,7 @@ class RollWindow(pg.GraphicsWindow):
         self.plotSwipe.showGrid(x=True, y=True, alpha=0.5)
         self.yAxisSwipe.setTickSpacing(levels=[(12,-0.5), (1,-0.5)])
 
+
         # Notes
         for e in notesWizard.getNotesAndRests():
             if e.isNote:
@@ -200,8 +235,60 @@ class RollWindow(pg.GraphicsWindow):
         self.nowLine = pg.InfiniteLine(0,90)
         self.plotSwipe.addItem(self.nowLine)
 
+        # self.notes_iter = self.notesWizard.getNotesAndRests()
+        self.notes_iter = self.notesWizard.piece.flat.notes
+        self.current_note = next(self.notes_iter)
+        print(self.current_note.time)
+        self.notes_done = False
+        self.score = 0
+        self.total_swipes = 0
+
+
+    def update_score(self):
+        if self.current_note.isNote:
+            prev_hits           =   self.score*self.total_swipes
+            self.total_swipes   +=  (self.current_note.seconds*
+                                    self.sweeper.swipesPerChunk*
+                                    self.sweeper.RATE/self.sweeper.CHUNK)
+            self.score          =   ((prev_hits+self.current_note.nbr_hits)
+                                    /self.total_swipes)
+
+        # swipes = (self.current_note.seconds*self.sweeper.swipesPerChunk*
+        #                             self.sweeper.RATE/self.sweeper.CHUNK)
+        # self.score += self.current_note.nbr_hits/swipes
+        print(self.score)
+
+
+    def set_current(self, time):
+        # print('in set', time)
+        # print('cond in set', self.current_note.time + self.current_note.seconds)
+        if time >= (self.current_note.time + self.current_note.seconds) and not self.notes_done:
+            self.update_score()    #????
+            try:
+                self.current_note = next(self.notes_iter)
+            except StopIteration:
+                self.notes_done = True
+
+    def assess_pitch(self, pitches, times):
+        # print('assesspitch', times)
+
+        for (p,t) in zip(pitches,times):
+            # print('in for', t)
+            self.set_current(t)
+            if self.current_note.isNote:
+                self.current_note.nbr_tries += 1
+                if p >= self.current_note.pitch.midi-3 and p <= self.current_note.pitch.midi+3: #ändra till +- 1/2 när någon som kan ta toner ska testa...
+                    self.current_note.nbr_hits += 1
+                ratio = self.current_note.nbr_hits/self.current_note.nbr_tries
+                self.current_note.rect.setBrush(pg.mkBrush((255*(1-ratio),255*ratio,0)))
+                # print(self.current_note.ratio)
+
     def update(self):
         newSwipes, newTimes = self.sweeper.getSwipes()
+        if len(newSwipes) > 0 and not self.notes_done:
+            # print('in update', newTimes)
+            # self.notesWizard.assess_pitch(newSwipes, newTimes)
+            self.assess_pitch(newSwipes, newTimes)
         self.swipes += newSwipes
         self.times  += newTimes
         if len(self.swipes) > 0:
@@ -211,6 +298,8 @@ class RollWindow(pg.GraphicsWindow):
         self.plotSwipe.setXRange(xRange[0]+dt, xRange[1]+dt, padding=0)
         self.t = time.time()-self.t0
         self.nowLine.setValue(self.t)
+        # test = self.notesWizard.getNotesAndRests().__iter__()
+        # print(test)
 
 def main():
     app = QtWidgets.QApplication([])
@@ -218,7 +307,7 @@ def main():
 
     sweeper    = RTSwipe()
     wizard     = NotesWizard("Vem_kan_segla.musicxml")
-    rollWindow = RollWindow(sweeper, wizard)
+    rollWindow = RollWindow(sweeper, wizard,updateInterval=70)
     app.aboutToQuit.connect(sweeper.exitHandler)
     rollWindow.show()
     rollWindow.raise_()

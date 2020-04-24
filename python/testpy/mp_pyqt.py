@@ -48,7 +48,7 @@ class MyWidget(pg.GraphicsWindow):
         print('in do_job')
         while True:
             try:
-                self.shut_down_queue.get_nowait()
+                self.wshut_down_queue.get_nowait()
             except:
                 try:
                     data = self.unprocessed_sound.get_nowait()

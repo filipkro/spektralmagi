@@ -12,6 +12,10 @@ def wait_for_event(e):
     event_is_set = e.wait()
     logging.debug('event set: %s', event_is_set)
 
+
+
+
+
 def wait_for_event_timeout(e, t):
     """Wait t seconds and then timeout"""
     while not e.isSet():

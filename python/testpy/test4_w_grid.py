@@ -167,6 +167,7 @@ class RollWindow(pg.GraphicsWindow):
         timeSig = notesWizard.getTimeSig()
         tempo   = notesWizard.getTempo()
 
+
         self.plotSwipe = self.addPlot(title="Swipe pitch estimates")
         self.plotSwipe.setYRange(36, 83, padding=0)
         self.plotSwipe.setXRange(-timeWindow/2, timeWindow/2, padding=0)
@@ -176,6 +177,7 @@ class RollWindow(pg.GraphicsWindow):
         self.yAxisSwipe = self.plotSwipe.getAxis("left")
         self.rightAxisSwipe = self.plotSwipe.getAxis("right")
         self.rightAxisSwipe.setTickSpacing(levels=[(12,-0.5), (1,-0.5)])
+
 
         majorTicks = []
         minorTicks = []
@@ -188,6 +190,9 @@ class RollWindow(pg.GraphicsWindow):
         self.yAxisSwipe.setTicks([majorTicks,minorTicks])
         self.plotSwipe.showGrid(x=True, y=True, alpha=0.5)
         self.yAxisSwipe.setTickSpacing(levels=[(12,-0.5), (1,-0.5)])
+
+        # self.yAxisSwipe.setStyle(tickTextOffset=5)
+
 
         # Notes
         for e in notesWizard.getNotesAndRests():
