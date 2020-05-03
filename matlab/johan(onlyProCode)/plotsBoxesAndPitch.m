@@ -10,7 +10,12 @@ superTitle{2} = 'Tenor';
 superTitle{3} = 'High baritone';
 superTitle{4} = 'Low baritone';
 superTitle{5} = 'Bass';
-fileName = ['naacor'; 'naainc'; 'txtcor'; 'txtinc']; % works since same nbr of chars
+
+fileName = cell(4,1);
+fileName{1} = 'Without text, correct version';
+fileName{2} = 'Without text, incorrect version';
+fileName{3} = 'With text, correct cersion';
+fileName{4} = 'With text, incorrect version';
 
 for voice = 4:4%1:5 % for every voice
     figure(voice)
@@ -33,7 +38,7 @@ for voice = 4:4%1:5 % for every voice
         set(gca,'YScale', 'log') % set log scale 
         comparison = comparenotes(peaks,notes{voice},1,1.03);
         plot(t,peaks(:,2),".");
-        title(fileName(k,:));
+        title(fileName{k});
         ylabel('Frequency (Hz)')
         xlabel('Time (s)')
         axis([0 70 120 600]) % 0-70 xaxis and 120-600 yaxis
