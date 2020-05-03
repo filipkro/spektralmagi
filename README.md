@@ -8,8 +8,8 @@ pysptk
 numpy  
 pyaudio  
 PyQt5 (or PyQt4 or pyside, with minor changes in code)  
-pyqtgraph 
-music21
+pyqtgraph   
+music21  
 
 all available with pip install
 
@@ -23,6 +23,6 @@ File to run at todays date (May 3rd):
 python/app.py
 
 
-Todo:
-fix downsample??
-test crepe??
+Todo:  
+fix downsample??  
+test crepe??  
