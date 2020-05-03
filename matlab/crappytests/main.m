@@ -40,7 +40,8 @@ for i=1:length(midinotes)
             tones(k,3) = ff(min(sort(findpeaks(spect,d)))); % estimated base freq
         end
         
-
+        [yin_peaks(t), a(t)] = yin_mgc(x,80,500,fs);
+        
         % Estimate the pseudo-spectra using q-SPICE.
 %         A  = exp( 2i*pi*(1:length(x))'*ff );
 %         [p,~,R] = q_SPICE( x, A, 2, 1e-4 );             % q=2
@@ -56,6 +57,25 @@ for i=1:length(midinotes)
 
     end
 end
+
+%fs = 44100;
+[sp,tp,ss] = swipep(track, fs, [80 500], 0.02, 0.25);
+
+medsp = movmedian(sp,100,'omitnan');
+
+%%
+peaks(end) = peaks(end)+1;
+figure
+plot(tones(:,1),tones(:,3),".")
+hold on
+plot((wlen:wlen:N)./fs,yin_peaks,'.')
+%plot((wlen:wlen:N)./fs,swipe_peaks,'.')
+plot(tp,sp,'.')
+plot(tp,medsp,'.')
+hold on
+plotparts(midinotes,voice)
+
+legend('Combfilter','Yin','SWIPE','swipe filtered')
 
 %%
 figure
@@ -106,8 +126,9 @@ for t=1:wnum-1
     [~, epeaks] = findpeaks(spect, 2);
     eratio(t) = sum(epeaks)/sum(spect);
     
-    if sum(spect) > 1e-5 && max(abs(xacf(5:end))) > 0.1 && eratio(t) > 0.01
-        per = combFilter(spect,1,[minfreq, length(spect)],4, 0, 0); % -0.01
+    %if sum(spect) > 1e-5 && max(abs(xacf(5:end))) > 0.1 && eratio(t) > 0.01
+        %per = combFilter(spect,1,[minfreq, length(spect)],4, 0, 0); % -0.01
+        per = combFilter(spect,0.8,[minfreq, length(spect)],3, 0, 0); % -0.01
         peaks(t,1) = ff(sort(findpeaks(per,1)));
         yin_peaks(t) = yin_mgc(x,80,500,fs);
 
@@ -122,22 +143,24 @@ for t=1:wnum-1
 %             figure
 %             semilogy(spect)
 %         end
-    end
-    if t==2810
-        
-        figure
-        stem(xacf)
-        
-        
-        figure
-        plot(ff,spect)
-        title('spect-t=2810')
-        figure
-        plot(ff,per)
-        title('per-t=2810')
-    end
+   % end
+%     if t==2810
+%         
+%         figure
+%         stem(xacf)
+%         
+%         
+%         figure
+%         plot(ff,spect)
+%         title('spect-t=2810')
+%         figure
+%         plot(ff,per)
+%         title('per-t=2810')
+%     end
     %peaks(t,2) = yin_mgc(x,180,350,fs);
-    end
+end
+
+[sp,tp,ss] = swipep(track, fs, [80 500], 0.02, 0.2);    
 
 newPeaks = zeros(size(peaks));
 reldist = @(f1, f2) abs(f1/f2-1);
@@ -148,14 +171,16 @@ for i=2:(length(peaks)-1)
     end
 end
 
-peaks = newPeaks;
-
+%peaks = newPeaks;
+%%
 figure
-plotparts(midinotes,voice)
 
-plot((wlen:wlen:N)./fs,peaks,".")
+plot((wlen:wlen:N)./fs,peaks,"b.")
 hold on
 plot((wlen:wlen:N)./fs,yin_peaks,'g.')
+plot(tp,sp,'r.')
+plotparts(midinotes,voice)
+legend('Combfilter','YIN','SWIPE')
 %plot((wlen:wlen:N)./fs,movmedian(peaks,37),".")
 
 %% Using built in 

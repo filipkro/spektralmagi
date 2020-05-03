@@ -7,6 +7,7 @@ from music21 import *
 
 import math
 import numpy as np
+from scipy import signal
 
 # import music21
 import pyaudio
@@ -20,17 +21,18 @@ BASE = np.log(2**(1 / 12))
 
 
 class RTSwipe:
-    def __init__(self, RATE=48000, CHUNK=6000, minfreq=50,
+    def __init__(self, RATE=44100, CHUNK=6000, minfreq=50,
                  maxfreq=1500, threshold=0.25):
         self.minfreq = minfreq
         self.maxfreq = maxfreq
         self.threshold = threshold
 
         # CHANNELS = 1
-        self.RATE = RATE
+        self.ds_factor = 1
+        self.RATE = int(RATE / self.ds_factor)
         self.CHUNK = CHUNK  # 2*2048
         self.swipesPerChunk = math.floor(
-            CHUNK / (RATE * 0.02))  # 20 ms per swipe estimate
+            CHUNK / (RATE * 0.02 * self.ds_factor))  # 20 ms per swipe estimate
         # FORMAT   = pyaudio.paInt16
         self.cnt = 0
 
@@ -57,7 +59,7 @@ class RTSwipe:
             input=True,
             output=False,
             stream_callback=self.audioCallback,
-            frames_per_buffer=self.CHUNK
+            frames_per_buffer=int(self.CHUNK * self.ds_factor)
         )
         self.process = mp.Process(target=self.swipeSound)
         self.process.start()
@@ -70,7 +72,8 @@ class RTSwipe:
         self.t = self.t0
 
     def audioCallback(self, in_data, frame_count, time_info, status):
-        sound = np.frombuffer(in_data, dtype=np.int16)
+        pre_sound = np.frombuffer(in_data, dtype=np.int16)
+        sound = signal.decimate(pre_sound, self.ds_factor)
         times = np.linspace(self.t - self.t0, time.time() - self.t0,
                             self.swipesPerChunk, True)
         self.t = time.time()

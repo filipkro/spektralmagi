@@ -12,11 +12,11 @@ superTitle{4} = 'Low baritone';
 superTitle{5} = 'Bass';
 fileName = ['naacor'; 'naainc'; 'txtcor'; 'txtinc']; % works since same nbr of chars
 
-for voice = 1:5 % for every voice
+for voice = 4:4%1:5 % for every voice
     figure(voice)
     sgtitle(superTitle{voice})
     
-    for k = 1:4     % for every track
+    for k = 1:1%1:4     % for every track
         if k == 1
             track = naacor(:,voice);
         elseif k == 2
@@ -37,6 +37,5 @@ for voice = 1:5 % for every voice
         ylabel('Frequency (Hz)')
         xlabel('Time (s)')
         axis([0 70 120 600]) % 0-70 xaxis and 120-600 yaxis
-
     end
 end

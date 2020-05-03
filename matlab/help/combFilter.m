@@ -25,13 +25,21 @@ Y = zeros(size(X));
 for f=limits(1):limits(2)
     k=1;
     while  (k <= kmax) && (f*k <= N-1)
-        Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)),:)*decay.^(k-1);
+        Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)),:)*decay.^(k-1)/(2*xtraTerms(1)+1);
+%         for l=1:xtraTerms(1)
+%             if round(f*k*inharmonicity(k,bias)-l) > 0
+%                 Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)-l),:)*decay.^(k-1)*xtraTerms(2).^l;
+%             end
+%             if round(f*k*inharmonicity(k,bias)+l) < length(X)
+%                 Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)+l),:)*decay.^(k-1)*xtraTerms(2).^l;
+%             end
+%         end
         for l=1:xtraTerms(1)
             if round(f*k*inharmonicity(k,bias)-l) > 0
-                Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)-l),:)*decay.^(k-1)*xtraTerms(2).^l;
+                Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)-l),:)*decay.^(k-1)*xtraTerms(2).^l/(2*xtraTerms(1)+1);
             end
             if round(f*k*inharmonicity(k,bias)+l) < length(X)
-                Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)+l),:)*decay.^(k-1)*xtraTerms(2).^l;
+                Y(f,:) = Y(f,:) + X(round(f*k*inharmonicity(k,bias)+l),:)*decay.^(k-1)*xtraTerms(2).^l/(2*xtraTerms(1)+1);
             end
         end
         k = k+1;

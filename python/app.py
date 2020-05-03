@@ -8,7 +8,6 @@ from music21 import *
 import math
 import numpy as np
 
-# import music21
 import pyaudio
 from pysptk.sptk import swipe
 
@@ -347,7 +346,7 @@ def main():
     pg.setConfigOptions(antialias=False)  # True seems to work as well
 
     sweeper = RTSwipe()
-    wizard = NotesWizard("Vem_kan_segla.musicxml")
+    wizard = NotesWizard("testpy/Vem_kan_segla.musicxml")
     rollWindow = RollWindow(sweeper, wizard, updateInterval=70)
     app.aboutToQuit.connect(sweeper.exitHandler)
     rollWindow.show()

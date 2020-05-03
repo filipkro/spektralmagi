@@ -8,7 +8,8 @@ pysptk
 numpy  
 pyaudio  
 PyQt5 (or PyQt4 or pyside, with minor changes in code)  
-pyqtgraph  
+pyqtgraph 
+music21
 
 all available with pip install
 
